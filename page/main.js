@@ -136,6 +136,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 		self.total = 0;
 		self.focused = false;
 		self.jobType = null;
+		self.summary = '';
 		self.projectId = null;
 		self.taskId = null;
 		self.dblclick = { clicks: 0, timeout: null };
@@ -167,6 +168,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 			.click(function (e) {
 				if (e.target != self.el.menuButton[0]) return;
 				e.stopPropagation();
+				closeMenus(e);
 				self.showMenu();
 			});
 
@@ -225,6 +227,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 				state: this.state,
 				start: this.start,
 				total: this.total,
+				summary: this.summary,
 				jobType: this.jobType
 			});
 		},
@@ -239,6 +242,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 					this.total = timer.total;
 					this.state = timer.state;
 					this.jobType = timer.jobType;
+					this.summary = timer.summary;
 					if (this.state == States.running) this.run();
 					return true;
 				}
@@ -394,7 +398,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 					billable_status: 1,
 					job_type_id: this.getJobTypeId(),
 					record_date: y + "-" + m + "-" + d,
-					summary: "",
+					summary: this.summary,
 					task_id: this.taskId,
 					user_id: angie.user_session_data.logged_user_id,
 					value: value
@@ -417,8 +421,6 @@ script.appendChild(document.createTextNode('(' + (function () {
 				jobTypesEls.push($('<option>').val(job_type.id).html(job_type.name).attr('selected', selected));
 			});
 
-			var jobTypeSelect = $('<select>');
-
 			self.el.menu = $('<div>');
 			self.el.menuButton.html([self.el.menu]);
 			self.el.menu
@@ -431,7 +433,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 							$('<div>').addClass('task_panel_popover').attr('tabindex', 0).html([
 								$('<div>').addClass('task_panel_property').html([
 									$('<label>').html('Job Type'),
-									jobTypeSelect
+									$('<select>')
 										.css({ marginTop: 10, width: '100%', backgroundColor: 'white' })
 										.html(jobTypesEls)
 										.change(function () {
@@ -444,6 +446,12 @@ script.appendChild(document.createTextNode('(' + (function () {
 									$('<input>').css(Styles.menuInput).val(self.getTimeString(true)).keyup(function (e) {
 										this.style.outlineColor = (self.setTimeString(this.value) ? null : 'red');
 										if (e.keyCode == 13) self.removeMenu();
+									})
+								]),
+								$('<div>').addClass('task_panel_property').html([
+									$('<label>').html('Description'),
+									$('<textarea>').css(Styles.menuInput).val(self.summary).keyup(function (e) {
+										self.summary = this.value;
 									})
 								]),
 								$('<div>').addClass('task_panel_actions').html([
@@ -470,8 +478,6 @@ script.appendChild(document.createTextNode('(' + (function () {
 						)
 					)
 				]);
-
-			jobTypeSelect.get(0).focus();
 		},
 		removeMenu: function () {
 			this.el.menu.remove();
@@ -498,7 +504,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 		}
 	};
 
-	var render = function () {
+	function render () {
 
 		// save the current timers out and remove them from the DOM
 		Timers.forEach(function (timer) {
@@ -532,7 +538,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 	};
 
 	// this will wait until we're mostly sure that the task have all been added to the page
-	var inject = function () {
+	function inject () {
 		var taskInsertTracking = { total: 0, last: null };
 		var injectInterval = window.setInterval(function () {
 			var total = $('div.task').length;
@@ -550,8 +556,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 		}, 100);
 	};
 
-	// remove the timer menu if we click outside of it
-	$(document.body).click(function (e) {
+	function closeMenus (e) {
 		Timers.forEach(function (timer) {
 			if (timer.el.menu) {
 				if (!$.contains(timer.el.menu[0], e.target)) {
@@ -559,7 +564,10 @@ script.appendChild(document.createTextNode('(' + (function () {
 				}
 			}
 		});
-	});
+	}
+
+	// remove the timer menu if we click outside of it
+	$(document.body).click(closeMenus);
 
 	// render the timers once a second
 	window.setInterval(function () {
