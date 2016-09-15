@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+	<head>
+		<title>ActiveCollabInlineTimers</title>
+		<link href="main.css" type="text/css" rel="stylesheet">
+		<script src="main.js"></script>
+	</head>
+	<body>
+		<div id="info" class="group" style="border-top: none;">
+			<label>ActiveCollabInlineTimers</label>
+			<div id="extension_info"></div>
+			<div id="injected_message">Please visit an activecollab page</div>
+		</div>
+		<div id="user_prefs" style="display: none;">
+			<div class="group" style="border-top: none;">
+				<label>Default Job Type</label>
+				<select id="default_job_type">
+				</select>
+			</div>
+			<div class="group">
+				<label>Rounding Interval</label>
+				<select id="rounding_interval">
+					<option value="0">Don't Round</option>
+					<option value="15">15</option>
+					<option value="30">30</option>
+					<option value="60">60</option>
+				</select>
+			</div>
+			<div class="group">
+				<label>Minimum Entry</label>
+				<select id="minimum_entry">
+					<option value="0">0</option>
+					<option value="15">15</option>
+					<option value="30">30</option>
+					<option value="45">45</option>
+					<option value="60">60</option>
+				</select>
+			</div>
+			<div class="group">
+				<label>Reset Timers</label>
+				<a>This page</a>
+				<a>Every page</a>
+			</div>
+			<div class="group">
+				<label>Submit Timers</label>
+				<a id="">This page</a>
+			</div>
+		</div>
+	</body>
+</html>

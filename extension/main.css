@@ -1,0 +1,67 @@
+body {
+	width: 200px;
+	height: auto;
+	margin: 0;
+	box-sizing: border-box;
+	background-color: #f7f7f7;
+}
+
+.group {
+	width: 100%;
+	height: auto;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-top: 1px solid #E1E1E1;
+	background-color: white;
+	padding: 5px 0;
+}
+
+.group label {
+	display: block;
+	width: 100%;
+	padding: 5px 15px;
+	font-size: 13px;
+	font-weight: bold;
+	color: #222;
+	line-height: 13px;
+}
+
+.group div {
+	display: block;
+	width: calc(100% - 30px);
+	padding: 5px 15px;
+	font-size: 13px;
+	color: #222;
+	line-height: 13px;
+}
+
+.group select {
+	width: calc(100% - 30px);
+	border: 1px solid #d1d1d1;
+	border-radius: 3px;
+	outline: none;
+	margin: 5px 15px;
+	box-sizing: border-box;
+	height: 20px;
+}
+
+.group a {
+	display: block;
+	width: 100%;
+	float: left;
+	box-sizing: border-box;
+	font-size: 12px;
+	text-decoration: underline;
+	padding: 5px 15px;
+	display: block;
+	text-decoration: none;
+	color: #222;
+	user-select: none;
+	cursor: pointer;
+}
+
+.group a:hover {
+	text-decoration: none;
+	background-color: #4181F2;
+	color: #FFF;
+}
