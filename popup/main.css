@@ -45,6 +45,10 @@ body {
 	height: 20px;
 }
 
+.group input[type='checkbox'] {
+	margin: 5px 15px;
+}
+
 .group a {
 	display: block;
 	width: 100%;

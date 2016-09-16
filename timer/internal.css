@@ -1,0 +1,115 @@
+.acit-timer {
+	width: 172px;
+	left: -178px;
+	margin-right: -178px;
+	float: left;
+	position: relative;
+	top: -25px;
+	height: 19px;
+	line-height: 17px;
+	clear: right;
+	text-align: center;
+	cursor: default;
+	box-sizing: border-box;
+}
+
+.acit-timer-time {
+	width: 48px;
+	height: 19px;
+	line-height: 17px;
+	clear: none;
+	color: white;
+	text-align: center;
+	cursor: pointer;
+	float: right;
+	border-radius: 5px;
+	box-sizing: border-box;
+	border: 1px solid #aaa;
+	user-select: none;
+}
+
+.acit-timer-button {
+	display: none;
+	height: 19;
+	line-height: 17px;
+	color: black;
+	float: right;
+	text-align: center;
+	cursor: pointer;
+	box-sizing: border-box;
+	margin-right: 4;
+	background-color: white;
+	border: 1px solid #aaa;
+	border-radius: 5px;
+	padding: 0 4px 0 4px;
+	user-select: none;
+}
+
+.acit-timer-menu {
+	display: none !important;
+	position: relative;
+	margin-left: 4px;
+	top: 2px;
+	display: block;
+	float: right;
+	width: 30px;
+	background-repeat: no-repeat;
+	background-position: center center;
+	border: 1px solid #666;
+	height: 16px;
+	background-color: #fff;
+	opacity: 0.4;
+}
+
+.acit-timer:hover .acit-timer-menu {
+	display: block !important;
+	border-color: rgb(102, 102, 102);
+}
+
+.acit-timer-menu-dropdown {
+	visibility: visible;
+	display: block !important;
+	left: -32px !important;
+	top: 21px !important;
+	text-align: left;
+}
+
+.acit-timer-menu-dropdown-input {
+	margin-top: 10px;
+	width: 100%;
+	height: 32px;
+	border-radius: 3px;
+	border: 1px solid #d1d1d1;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+	padding: 8px;
+	font-size: 12px;
+	font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
+}
+
+.acit-timer-menu-dropdown-select {
+	margin-top: 10px;
+	width: 100%;
+	background-color: white;
+}
+
+.acit-notifications {
+	position: fixed;
+	top: 0;
+	right: 0;
+}
+
+.acit-notifications-notification {
+	position: relative;
+	width: 250px;
+	height: 100px;
+	border: 1px solid #aaa;
+	border-radius: 5px;
+}
+
+.profile_page .profile_page_tasks .profile_page_section_group .profile_page_section_group_label {
+	padding-bottom: 0.5em;
+}
+
+.task_list_group:first-of-type .task_list:not(.subtask_list) {
+	clear: left;
+}

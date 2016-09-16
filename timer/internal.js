@@ -1,7 +1,9 @@
+// this file is injected by 'check/external.js' after 'check/internal.js' tells it that we're dealing with an ActiveCollab Page
 (function () {
+
 var script = document.createElement('script');
 script.appendChild(document.createTextNode('(' + (function () {
-//------------------------------------- START INJECTION CODE -------------------------------------
+/* **************************************** START INJECTION CODE **************************************** */
 	'use strict';
 
 	var ACIT = {
@@ -42,89 +44,6 @@ script.appendChild(document.createTextNode('(' + (function () {
 
 	var Timers = [], States = { 'stopped': 0, 'paused': 1, 'running': 2, 'submitting': 3 };
 
-	var Styles = {
-		base: {
-			position: 'relative',
-			top: -25,
-			left: -178,
-			marginRight: '-178px',
-			width: 172,
-			height: 19,
-			lineHeight: '17px',
-			clear: 'right',
-			float: 'left',
-			textAlign: 'center',
-			cursor: 'default',
-			boxSizing: 'border-box'
-		},
-		time: {
-			width: 48,
-			height: 19,
-			lineHeight: '17px',
-			clear: 'none',
-			color: 'white',
-			textAlign: 'center',
-			cursor: 'pointer',
-			float: 'right',
-			borderRadius: '5px',
-			boxSizing: 'border-box',
-			border: '1px solid #aaa',
-			userSelect: 'none'
-		},
-		button: {
-			display: 'none',
-			height: 19,
-			lineHeight: '17px',
-			color: 'black',
-			float: 'right',
-			textAlign: 'center',
-			cursor: 'pointer',
-			boxSizing: 'border-box',
-			marginRight: 4,
-			backgroundColor: 'white',
-			border: '1px solid #aaa',
-			borderRadius: '5px',
-			padding: '0 4px 0 4px',
-			userSelect: 'none'
-		},
-		menuButton: {
-			display: 'block',
-			float: 'right',
-			width: '30px',
-			backgroundRepeat: 'no-repeat',
-			backgroundPosition: 'center center',
-			marginLeft: '4px',
-			position: 'relative',
-			top: 2,
-			border: '1px solid #666',
-			height: '16px',
-			backgroundColor: '#fff'
-		},
-		menuInput: {
-			marginTop: 10,
-			width: '100%',
-			height: 32,
-			borderRadius: 3,
-			border: '1px solid #d1d1d1',
-			boxShadow: '0 1px 1px rgba(0, 0, 0, 0.05)',
-			padding: 8,
-			fontSize: '12px',
-			fontFamily: '"Clear Sans", "Helvetica Neue", Arial, sans-serif'
-		},
-		notificationManager: {
-			position: 'fixed',
-			top: 0,
-			right: 0
-		},
-		notification: {
-			position: 'relative',
-			width: '250px',
-			height: '100px',
-			border: '1px solid #aaa',
-			borderRadius: '5px'
-		}
-	};
-
 	function Timer (parentEl) {
 
 		Timers.push(this);
@@ -134,8 +53,8 @@ script.appendChild(document.createTextNode('(' + (function () {
 		self.state = States.stopped;
 		self.start = 0;
 		self.total = 0;
-		self.focused = false;
 		self.jobType = null;
+		self.billable = null;
 		self.summary = '';
 		self.projectId = null;
 		self.taskId = null;
@@ -143,37 +62,25 @@ script.appendChild(document.createTextNode('(' + (function () {
 		self.el = {};
 
 		self.el.base = $('<div>');
-		self.el.menuButton = $('<button>');
+		self.el.menu = $('<button>');
 		self.el.time = $('<div>');
 
-		parentEl.append(self.el.base.html([self.el.time, self.el.menuButton]));
+		parentEl.append(self.el.base.html([self.el.time, self.el.menu]));
 
-		self.el.base
-			.css(Styles.base)
-			.mouseout(function (e) {
-				if (!self.el.menu) {
-					self.focused = false;
-					self.updateButtonVisibility();
-				}
-			})
-			.mouseover(function (e) {
-				self.focused = true;
-				self.updateButtonVisibility();
-			});
+		self.el.base.addClass('acit-timer');
 
-		self.el.menuButton
-			.css(Styles.menuButton)
-			.addClass('icon')
-			.addClass('icon_options_dropdown_black')
+		self.el.menu
+			.addClass('acit-timer-menu icon icon_options_dropdown_black')
 			.click(function (e) {
-				if (e.target != self.el.menuButton[0]) return;
+				if (e.target != self.el.menu[0]) return;
 				e.stopPropagation();
-				closeMenus(e);
+				removeMenus(e);
 				self.showMenu();
 			});
 
 		self.el.time
-			.css(Styles.time).html('00:00')
+			.addClass('acit-timer-time')
+			.html('00:00')
 			.click(function (e) {
 
 				self.dblclick.clicks++;
@@ -197,16 +104,14 @@ script.appendChild(document.createTextNode('(' + (function () {
 						clearTimeout(self.dblclick.timeout);
 						self.dblclick.clicks = 0;
 						self.dblclick.timeout = null;
+						removeMenus(e);
 						self.showMenu();
 					}
 				}
 
 				e.stopPropagation();
 			})
-			.dblclick(function (e) {
-				e.stopPropagation();
-				e.preventDefault();
-			});
+			.dblclick(function (e) { e.stopPropagation(); e.preventDefault(); });
 	}
 
 	Timer.prototype = {
@@ -216,6 +121,13 @@ script.appendChild(document.createTextNode('(' + (function () {
 				jobTypeId = this.jobType;
 			}
 			return jobTypeId;
+		},
+		getBillable: function () {
+			var billable = ACIT.prefs.get('defaultIsBillable', true);
+			if (this.billable !== null && this.billable !== undefined) {
+				billable = this.billable;
+			}
+			return billable;
 		},
 		runningFor: function () {
 			return (this.state == States.running ? Date.now() - this.start : 0);
@@ -227,8 +139,9 @@ script.appendChild(document.createTextNode('(' + (function () {
 				state: this.state,
 				start: this.start,
 				total: this.total,
-				summary: this.summary,
-				jobType: this.jobType
+				jobType: this.jobType,
+				billable: this.billable,
+				summary: this.summary
 			});
 		},
 		load: function (projectId, taskId) {
@@ -242,6 +155,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 					this.total = timer.total;
 					this.state = timer.state;
 					this.jobType = timer.jobType;
+					this.billable = timer.billable;
 					this.summary = timer.summary;
 					if (this.state == States.running) this.run();
 					return true;
@@ -259,9 +173,17 @@ script.appendChild(document.createTextNode('(' + (function () {
 			var visible = $.contains(document.body, this.el.base[0]);
 			return visible;
 		},
-		totalTime: function (round) {
+		totalTime: function (roundBy, minimumValue, removeSeconds) {
 			var total = this.total + (this.state == States.running ? (Date.now() - this.start) : 0);
-			if (round) total = Math.ceil(total / round) * round;
+			if (removeSeconds === true) {
+				total -= total % 10000;
+			}
+			if (Number.isInteger(roundBy) && roundBy !== 0) {
+				total = Math.ceil(total / roundBy) * roundBy;
+			}
+			if (Number.isInteger(minimumValue) && total < minimumValue) {
+				total = minimumValue;
+			}
 			return total;
 		},
 		setTimeString: function (time) {
@@ -299,9 +221,9 @@ script.appendChild(document.createTextNode('(' + (function () {
 
 			return true;
 		},
-		getTimeString: function (colons, round) {
+		getTimeString: function (colons, roundBy, minimumValue, removeSeconds) {
 
-			var time = this.totalTime(round), text = '';
+			var time = this.totalTime(roundBy, minimumValue, removeSeconds), text = '';
 
 			// setting colons in the call will override the default
 			if ((colons === undefined || colons === null) && this.state == States.running) {
@@ -317,14 +239,6 @@ script.appendChild(document.createTextNode('(' + (function () {
 			m = (m.length == 1 ? '0' + m : m);
 
 			return h + (colons ? ':' : ' ') + m;
-		},
-		updateButtonVisibility: function () {
-			if (this.focused) {
-				this.el.menuButton.show();
-			}
-			else {
-				this.el.menuButton.hide();
-			}
 		},
 		renderTime: function () {
 			var colons = true;
@@ -353,7 +267,6 @@ script.appendChild(document.createTextNode('(' + (function () {
 				this.state = States.running;
 			}
 
-			this.updateButtonVisibility();
 			this.renderTime();
 		},
 		pause: function () {
@@ -363,17 +276,16 @@ script.appendChild(document.createTextNode('(' + (function () {
 				this.state = States.paused;
 			}
 
-			this.updateButtonVisibility();
 			this.renderTime();
 		},
 		stop: function () {
 
 			if (this.state != States.stopped) {
 				this.start = this.total = 0;
+				this.summary = "";
 				this.state = States.stopped;
 			}
 
-			this.updateButtonVisibility();
 			this.renderTime();
 		},
 		submit: function (cb) {
@@ -384,7 +296,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 			m = (m.toString().length == 1) ? '0' + m : m;
 			d = (d.toString().length == 1) ? '0' + d : d;
 
-			var value = this.getTimeString(true);
+			var value = this.getTimeString(true, ACIT.prefs.get('roundingInterval'), ACIT.prefs.get('minimumEntry'), true);
 
 			// make the request
 			fetch('http://projects.drminc.com/api/v1/projects/' + this.projectId + '/time-records', {
@@ -395,7 +307,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					billable_status: 1,
+					billable_status: this.getBillable(),
 					job_type_id: this.getJobTypeId(),
 					record_date: y + "-" + m + "-" + d,
 					summary: this.summary,
@@ -408,11 +320,12 @@ script.appendChild(document.createTextNode('(' + (function () {
 			.then(function (json) { cb(null, json); })
 			.catch(function (ex) { cb(ex, null); });
 		},
-		showMenu: function () {
+		showMenu: function (focusSubmit) {
 
 			var self = this;
 
 			var jobTypeId = self.getJobTypeId();
+			var billable = self.getBillable();
 
 			// generate a list of <options> for the job type <select>
 			var jobTypesEls = [];
@@ -421,11 +334,14 @@ script.appendChild(document.createTextNode('(' + (function () {
 				jobTypesEls.push($('<option>').val(job_type.id).html(job_type.name).attr('selected', selected));
 			});
 
-			self.el.menu = $('<div>');
-			self.el.menuButton.html([self.el.menu]);
-			self.el.menu
-				.addClass('popover task_popover')
-				.css({ visibility: 'visible', display: 'block', left: -115, top: 15, textAlign: 'left' })
+			var submitButton = $('<a>');
+
+			self.el.menu[0].style.setProperty('display', 'block', 'important');
+
+			self.el.menuDropdown = $('<div>');
+			self.el.base.append([self.el.menuDropdown]);
+			self.el.menuDropdown
+				.addClass('acit-timer-menu-dropdown popover task_popover')
 				.html([
 					$('<div>').addClass('popover_arrow').css({ left: '50%' }),
 					$('<div>').addClass('popover_inner').html(
@@ -434,7 +350,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 								$('<div>').addClass('task_panel_property').html([
 									$('<label>').html('Job Type'),
 									$('<select>')
-										.css({ marginTop: 10, width: '100%', backgroundColor: 'white' })
+										.addClass('acit-timer-menu-dropdown-select')
 										.html(jobTypesEls)
 										.change(function () {
 											self.jobType = parseInt(this.value);
@@ -442,20 +358,35 @@ script.appendChild(document.createTextNode('(' + (function () {
 										})
 								]),
 								$('<div>').addClass('task_panel_property').html([
+									$('<label>').html('Billable'),
+									$('<select>')
+										.addClass('acit-timer-menu-dropdown-select')
+										.html([
+											$('<option>').val('1').html('Yes').attr('selected', (billable ? 'selected' : null)),
+											$('<option>').val('0').html('No').attr('selected', (!billable ? 'selected' : null))
+										])
+										.change(function () {
+											self.billable = (this.value === '1');
+											self.save();
+										})
+								]),
+								$('<div>').addClass('task_panel_property').html([
 									$('<label>').html('Time'),
-									$('<input>').css(Styles.menuInput).val(self.getTimeString(true)).keyup(function (e) {
+									$('<input>').addClass('acit-timer-menu-dropdown-input').val(self.getTimeString(true)).keyup(function (e) {
 										this.style.outlineColor = (self.setTimeString(this.value) ? null : 'red');
 										if (e.keyCode == 13) self.removeMenu();
-									})
+										e.preventDefault();
+									}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
 								]),
 								$('<div>').addClass('task_panel_property').html([
 									$('<label>').html('Description'),
-									$('<textarea>').css(Styles.menuInput).val(self.summary).keyup(function (e) {
+									$('<textarea>').addClass('acit-timer-menu-dropdown-input').val(self.summary).keyup(function (e) {
 										self.summary = this.value;
-									})
+										e.preventDefault();
+									}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
 								]),
 								$('<div>').addClass('task_panel_actions').html([
-									$('<a>').attr('href', "#").html('Submit').click(function () {
+									submitButton.attr('href', "#").html('Submit').click(function () {
 										self.submit(function (err, response) {
 											// leave the timer in it's old state if the request failed
 											if (err) {
@@ -466,6 +397,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 												console.log(response);
 												self.stop();
 												self.save();
+												self.removeMenu();
 											}
 										});
 									}),
@@ -478,12 +410,13 @@ script.appendChild(document.createTextNode('(' + (function () {
 						)
 					)
 				]);
+
+			if (focusSubmit) submitButton.get(0).focus();
 		},
 		removeMenu: function () {
-			this.el.menu.remove();
-			this.el.menu = null;
-			this.focused = false;
-			this.updateButtonVisibility();
+			this.el.menu.css('display', '');
+			this.el.menuDropdown.remove();
+			this.el.menuDropdown = null;
 		}
 	};
 
@@ -498,7 +431,7 @@ script.appendChild(document.createTextNode('(' + (function () {
 			}, 1000);
 		},
 		create: function (message) {
-			var el = $('<div>').css(Styles.notification).html(message);
+			var el = $('<div>').css('acit-notification').html(message);
 			Notification.notifications.push({ start: Date.now(), el: el });
 			Notification.manager.append(el);
 		}
@@ -517,9 +450,10 @@ script.appendChild(document.createTextNode('(' + (function () {
 
 		var onMyWork = window.location.pathname.indexOf('/my-work') !== -1;
 
+		var renderedSomething = false;
 		$('div.task').each(function (e) {
 
-			if (!onMyWork) $(this).css('paddingLeft', '120px');
+			if (!onMyWork) $(this).css('paddingLeft', '100px');
 
 			var split = $(this).find('.task_name').attr('href').split('/');
 			var timer = new Timer($(this).find('.task_view_mode').parent());
@@ -532,9 +466,12 @@ script.appendChild(document.createTextNode('(' + (function () {
 				timer.state = States.stopped;
 			}
 
-			timer.updateButtonVisibility();
 			timer.renderTime();
+
+			renderedSomething = true;
 		});
+
+		console.log('called render, renderedSomething = ' + renderedSomething);
 	};
 
 	// this will wait until we're mostly sure that the task have all been added to the page
@@ -556,10 +493,10 @@ script.appendChild(document.createTextNode('(' + (function () {
 		}, 100);
 	};
 
-	function closeMenus (e) {
+	function removeMenus (e) {
 		Timers.forEach(function (timer) {
-			if (timer.el.menu) {
-				if (!$.contains(timer.el.menu[0], e.target)) {
+			if (timer.el.menuDropdown) {
+				if (!$.contains(timer.el.menuDropdown[0], e.target)) {
 					timer.removeMenu();
 				}
 			}
@@ -567,27 +504,31 @@ script.appendChild(document.createTextNode('(' + (function () {
 	}
 
 	// remove the timer menu if we click outside of it
-	$(document.body).click(closeMenus);
+	$(document.body).click(removeMenus);
+
+	// check if the timers need re rendered
+	var lastWindowHref = window.location.href;
+	function checkForDirtyDOM () {
+		//console.log('here');
+		if (Timers.some(function (timer) {
+			if (!timer.visibleInDOM()) return true;	
+		}) || lastWindowHref != window.location.href) render();
+		lastWindowHref = window.location.href;
+		window.requestAnimationFrame(checkForDirtyDOM);
+	}
 
 	// render the timers once a second
 	window.setInterval(function () {
-
-		var renderAgain = (Timers.length === 0);
-
 		Timers.forEach(function (timer) {
 			timer.save();
 			timer.renderTime();
-			if (!renderAgain && !timer.visibleInDOM()) renderAgain = true;
 		});
-
-		// we render everything again if something has disappeared from the DOM
-		if (renderAgain) render();
 	}, 1000);
 
 	// setup message passing with the content scripts isolated environment
 	window.addEventListener("message", function (event) {
-		if (event.source != window || !event.data.type || event.data.type != "FROM_EXT") return;
-		var responseData = { id: event.data.id, type: "FROM_PAGE", payload: { action: event.data.payload.action } };
+		if (event.source != window || !event.data.from || event.data.from != "TIMER_EXTERNAL") return;
+		var responseData = { id: event.data.id, from: "TIMER_INTERNAL", payload: { action: event.data.payload.action } };
 		switch (event.data.payload.action) {
 			case 'get': {
 				responseData.payload.value = ACIT.prefs.get(event.data.payload.key)
@@ -603,14 +544,17 @@ script.appendChild(document.createTextNode('(' + (function () {
 	}, false);
 
 	inject();
-//-------------------------------------- END INJECTION CODE --------------------------------------
+	checkForDirtyDOM();
+/* **************************************** END INJECTION CODE **************************************** */
 }) + ')();'));
 (document.body || document.head || document.documentElement).appendChild(script);
 })();
 
+/* ****************************************.BEGIN CONTENT SCRIPT CODE.**************************************** */
+
 // setup message passing with the browser window
 var pmcbs = []; window.addEventListener("message", function (event) {
-	if (event.source != window || !event.data.type || event.data.type != "FROM_PAGE") return;
+	if (event.source != window || !event.data.from || event.data.from != "TIMER_INTERNAL") return;
 	pmcbs.forEach(function (cb, i, cbs) {
 		if (cb.id == event.data.id) {
 			cb.cb(event.data.payload);
@@ -621,13 +565,14 @@ var pmcbs = []; window.addEventListener("message", function (event) {
 
 // listen for messages from the popup
 chrome.runtime.onMessage.addListener(function (msg, sender, respond) {
+	if (msg.from != "POPUP") return;
 	var id = "", chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	for (var i = 0; i < 32; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
-	window.postMessage({ id: id, type: "FROM_EXT", payload: msg }, "*");
-	pmcbs.push({ id: id, cb: function (payload) {
-		respond(payload);
-	}});
+	pmcbs.push({ id: id, cb: function (payload) { respond(payload); } });
+	window.postMessage({ id: id, from: "TIMER_EXTERNAL", payload: msg.payload }, "*");
 	return true;
 });
 
 window.injected = true;
+
+/* ****************************************.END.CONTENT.SCRIPT.CODE.**************************************** */
