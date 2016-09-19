@@ -1,5 +1,6 @@
 body {
-	width: 200px;
+	width: 220px;
+	min-height: 49px;
 	height: auto;
 	margin: 0;
 	box-sizing: border-box;
@@ -16,17 +17,21 @@ body {
 	padding: 5px 0;
 }
 
-.group label {
+.group .logo {
 	display: block;
 	width: 100%;
-	padding: 5px 15px;
-	font-size: 13px;
-	font-weight: bold;
-	color: #222;
-	line-height: 13px;
+	height: 32px;
+	background-image: url('../icons/icon128.png');
+	background-size: 32px 32px;
+	background-repeat: no-repeat;
+	background-position: center;
 }
 
-.group div {
+.group label {
+	font-weight: bold;
+}
+
+.group label, .group p {
 	display: block;
 	width: calc(100% - 30px);
 	padding: 5px 15px;

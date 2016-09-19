@@ -6,16 +6,13 @@
 		<script src="main.js"></script>
 	</head>
 	<body>
-		<div id="info" class="group" style="border-top: none;">
-			<label>ActiveCollabInlineTimers</label>
-			<div id="extension_info"></div>
-			<div id="injected_message">Please visit an activecollab page</div>
+		<div id="no_injection" class="group" style="border-top: none; padding: 0;">
+			<p id="message">Please visit an activecollab page</p>
 		</div>
-		<div id="user_prefs" style="display: none;">
+		<div id="injection" style="display: none;">
 			<div class="group" style="border-top: none;">
 				<label>Default Job Type</label>
-				<select id="default_job_type">
-				</select>
+				<select id="default_job_type"></select>
 			</div>
 			<div class="group">
 				<label>Default Is Billable</label>

@@ -45,14 +45,12 @@
 
 		var manifest = chrome.runtime.getManifest();
 
-		document.getElementById('extension_info').innerHTML = "version " + manifest.version + " | by " + manifest.author;
-
 		chrome.tabs.executeScript({ code: 'window.injected;' }, function (results) {
 
 			if (!results[0]) return;
 
-			document.getElementById('info').style.display = "none";
-			document.getElementById('user_prefs').style.display = "block";
+			document.getElementById('no_injection').style.display = "none";
+			document.getElementById('injection').style.display = "block";
 
 			document.getElementById('default_job_type').addEventListener('change', function () {
 				ACIT.prefs.set('defaultJobType', this.value, function () {});
