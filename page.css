@@ -96,14 +96,21 @@
 	position: fixed;
 	top: 0;
 	right: 0;
+	z-index: 999999;
 }
 
 .acit-notifications-notification {
 	position: relative;
 	width: 250px;
-	height: 100px;
+	height: auto;
 	border: 1px solid #aaa;
 	border-radius: 5px;
+	box-sizing: border-box;
+	padding: 16px;
+	margin: 16px;
+	margin-bottom: 0;
+	background-color: white;
+	z-index: 999999;
 }
 
 .profile_page .profile_page_tasks .profile_page_section_group .profile_page_section_group_label {

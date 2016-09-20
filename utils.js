@@ -1,5 +1,12 @@
 module.exports = {
 
+	activeCollabDateString: function (date) {
+		var y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
+		m = (m.toString().length == 1) ? '0' + m : m;
+		d = (d.toString().length == 1) ? '0' + d : d;
+		return y + "-" + m + "-" + d;
+	},
+
 	totalTime: function (timer, roundBy, minimumValue, removeSeconds) {
 
 		var total = timer.total + (timer.state == 'running' ? (Date.now() - timer.start) : 0);

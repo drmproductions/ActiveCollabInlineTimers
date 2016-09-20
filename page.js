@@ -90,108 +90,180 @@
 		// require our modules
 		require(payload.url + 'utils.js', function (utils) {
 
+			var NotificationManager = {
+				_notifications: [],
+				_genId: function (len) {
+					var id = "", c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+					for (var i = 0; i < len; i++) id += c.charAt(Math.floor(Math.random() * c.length));
+					return id;
+				},
+				_el: null,
+				setup: function () {
+					this._el = $('<div>').addClass('acit-notifications');
+					$(document.body).append(this._el);
+				},
+				create: function (content) {
+					var id = this._genId(32);
+					var el = $('<div>').addClass('acit-notifications-notification').html(content);
+					this._el.append(el);
+					this._notifications.push({ id: id, el: el });
+					return id;
+				},
+				update: function (id, content) {
+					this._notifications.some(function (notification, i, notifications) {
+						if (notification.id == id) {
+							notification.el.html(content);
+							return true;
+						}
+					});
+				},
+				clear: function (id) {
+					var self = this;
+					var notification = null;
+					self._notifications.some(function (n) {
+						if (n.id == id) { notification = n; return true; }
+					});
+					if (notification) {
+						notification.el.fadeOut(500, function () {
+							notification.el.css({ visibility: 'hidden', display: 'block' });
+							notification.el.slideUp(250, function () {
+								console.log('here!');
+								//notification.el.remove();
+								//self._notifications.splice(this._notifications.indexOf(notification), 1);
+							});
+						});
+					}
+				}
+			};
+
+			NotificationManager.setup();
+
+			var test = NotificationManager.create('Hello world!');
+			NotificationManager.create('Hello world 2!');
+			window.setTimeout(function () { NotificationManager.clear(test); }, 1000);
+
 			var TimerManager = {
 				timers: [],
 				menuElement: null,
+				timerForMenu: null,
 				requestUpdateTimer: null,
 				mutationObserver: null,
-				showMenu: function (project, task) {
-					// remove the old menu if it exists
-					if (this.menuElement) {
-						this.menuElement.remove();
-						this.menuElement = null;
+				removeMenu: function (e) {
+					if (TimerManager.timerForMenu) {
+						TimerManager.timerForMenu.el.menu.css('display', '');
+						TimerManager.menuElement.remove();
+						TimerManager.menuElement = null;
+						TimerManager.timerForMenu = null;
 					}
+				},
+				showMenu: function (project, task) {
+
+					var self = this;
+
+					// remove the old menu if it exists
+					if (self.menuElement) {
+						self.timerForMenu.el.menu.css('display', '');
+						self.menuElement.remove();
+						self.menuElement = null;
+						self.timerForMenu = null;
+					}
+
 					// create the new menu, if the timer exists
 					var timer = this.getTimer(project, task);
+
 					if (timer) {
-						this.menuElement = $('<div>');
-						timer.el.base.append([this.menuElement]);
 
-						var jobTypesEls = [];
-						window.angie.collections.job_types.forEach(function (job_type) {
-							var selected = (jobTypeId == job_type.id ? 'selected' : null);
-							jobTypesEls.push($('<option>').val(job_type.id).html(job_type.name).attr('selected', selected));
-						});
+						self.timerForMenu = timer;
+						self.timerForMenu.el.menu[0].style.setProperty('display', 'block', 'important');
 
-						var jobTypeEl = $('<div>').addClass('task_panel_property').html([
-							$('<label>').html('Job Type'),
-							$('<select>')
-								.addClass('acit-timer-menu-dropdown-select')
-								.html(jobTypesEls)
-								.change(function () {
-									Server.do('setJobType', {
+						self.menuElement = $('<div>');
+						timer.el.base.append([self.menuElement]);
+
+						Server.do('getMenuProps', { project: project, task: task }, function (payload) {
+
+							var jobTypeEl = $('<div>').addClass('task_panel_property').html([
+								$('<label>').html('Job Type'),
+								$('<select>')
+									.addClass('acit-timer-menu-dropdown-select')
+									.html(window.angie.collections.job_types.map(function (jobType) {
+										return $('<option>').val(jobType.id).html(jobType.name).attr('selected', (payload.jobTypeId == jobType.id ? 'selected' : null));
+									}))
+									.change(function () {
+										Server.do('timerSetJobType', {
+											project: project,
+											task: task,
+											value: parseInt(this.value)
+										});
+									})
+							]);
+
+							var billableEl = $('<div>').addClass('task_panel_property').html([
+								$('<label>').html('Billable'),
+								$('<select>')
+									.addClass('acit-timer-menu-dropdown-select')
+									.html([
+										$('<option>').val('1').html('Yes').attr('selected', (payload.billable ? 'selected' : null)),
+										$('<option>').val('0').html('No').attr('selected', (!payload.billable ? 'selected' : null))
+									])
+									.change(function () {
+										Server.do('timerSetBillable', {
+											project: project,
+											task: task,
+											value: (this.value === '1')
+										});
+									})
+							]);
+
+							var timeEl = $('<div>').addClass('task_panel_property').html([
+								$('<label>').html('Time'),
+								$('<input>').addClass('acit-timer-menu-dropdown-input')
+								.val(payload.formattedTime)
+								.keyup(function (e) {
+									var self = this;
+									Server.do('timerSetTime', {
 										project: project,
 										task: task,
-										value: parseInt(this.value)
+										value: this.value
+									}, function (payload) {
+										self.style.outlineColor = (payload.valid ? null : 'red');
 									});
-								})
-						]);
-
-						var billableEl = $('<div>').addClass('task_panel_property').html([
-							$('<label>').html('Billable'),
-							$('<select>')
-								.addClass('acit-timer-menu-dropdown-select')
-								.html([
-									$('<option>').val('1').html('Yes').attr('selected', (billable ? 'selected' : null)),
-									$('<option>').val('0').html('No').attr('selected', (!billable ? 'selected' : null))
-								])
-								.change(function () {
-									//self.billable = (this.value === '1');
-									//self.save();
-								})
-						]);
-
-						var timeEl = $('<div>').addClass('task_panel_property').html([
-							$('<label>').html('Time'),
-							$('<input>').addClass('acit-timer-menu-dropdown-input').val(self.getTimeString(true)).keyup(function (e) {
-								this.style.outlineColor = (self.setTimeString(this.value) ? null : 'red');
-								if (e.keyCode == 13) self.removeMenu();
-								e.preventDefault();
-							}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
-						]);
-
-						var descriptionEl = $('<div>').addClass('task_panel_property').html([
-							$('<label>').html('Description'),
-							$('<textarea>').addClass('acit-timer-menu-dropdown-input').val(self.summary).keyup(function (e) {
-								self.summary = this.value;
-								e.preventDefault();
-							}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
-						]);
-
-						var actionsEl = $('<div>').addClass('task_panel_actions').html([
-							submitButton.attr('href', "#").html('Submit').click(function () {
-								self.submit(function (err, response) {
-									// leave the timer in it's old state if the request failed
-									if (err) {
-										console.log(err);
-									}
-									// reset the timer if we we're successful
-									else {
-										console.log(response);
-										self.stop();
-										self.save();
-										self.removeMenu();
-									}
-								});
-							}),
-							$('<a>').attr('href', "#").html('Reset').click(function () {
-								self.stop();
-								self.removeMenu();
-							})
-						]);
-
-						self.menuElement
-							.addClass('acit-timer-menu-dropdown popover task_popover')
-							.html([
-								$('<div>').addClass('popover_arrow').css({ left: '50%' }),
-								$('<div>').addClass('popover_inner').html(
-									$('<div>').addClass('popover_content').html(
-										$('<div>').addClass('task_panel_popover').attr('tabindex', 0).html([
-											jobTypeEl, billableEl, timeEl, descriptionEl, actionsEl
-										])
-									)
-								)
+									if (e.keyCode == 13) TimerManager.removeMenu();
+									e.preventDefault();
+								}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
 							]);
+
+							var descriptionEl = $('<div>').addClass('task_panel_property').html([
+								$('<label>').html('Description'),
+								$('<textarea>').addClass('acit-timer-menu-dropdown-input').val(payload.summary).keyup(function (e) {
+									Server.do('timerSetSummary', { project: project, task: task, value: this.value });
+									e.preventDefault();
+								}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
+							]);
+
+							var actionsEl = $('<div>').addClass('task_panel_actions').html([
+								$('<a>').attr('href', "#").html('Submit').click(function () {
+									TimerManager.submitTimer(project, task);
+									TimerManager.removeMenu();
+								}),
+								$('<a>').attr('href', "#").html('Reset').click(function () {
+									Server.do('timerStop', { project: project, task: task });
+									TimerManager.removeMenu();
+								})
+							]);
+
+							self.menuElement
+								.addClass('acit-timer-menu-dropdown popover task_popover')
+								.html([
+									$('<div>').addClass('popover_arrow').css({ left: '50%' }),
+									$('<div>').addClass('popover_inner').html(
+										$('<div>').addClass('popover_content').html(
+											$('<div>').addClass('task_panel_popover').attr('tabindex', 0).html([
+												jobTypeEl, billableEl, timeEl, descriptionEl, actionsEl
+											])
+										)
+									)
+								]);
+						});
 					}
 				},
 				getSendableTimers: function () {
@@ -316,9 +388,32 @@
 						timer.el.time.html(html);
 					});
 				},
-				submitTimer: function (project, task, data) {},
+				submitTimer: function (project, task) {
+					var notificationId = NotificationManager.create('Submitting timer');
+					Server.do('timerSubmittableData', { project: project, task: task }, function (payload) {
+						payload.user_id = angie.user_session_data.logged_user_id;
+						fetch('http://projects.drminc.com/api/v1/projects/' + project + '/time-records', {
+							method: 'POST',
+							credentials: 'include',
+							headers: {
+								'X-Angie-CsrfValidator': window.getCsrfCookie(),
+								'Content-Type': 'application/json'
+							},
+							body: JSON.stringify(payload)
+						})
+						.then(function (response) { return response.json(); })
+						.then(function (json) {
+							Server.do('timerSubmitted', { project: project, task: task }, function () {
+								NotificationManager.update(notificationId, 'Time successfully submitted!');
+								window.setTimeout(function () {
+									NotificationManager.clear(notificationId);
+								}, 1500);
+							});
+						})
+						.catch(function (ex) { throw new Error(ex); });
+					});
+				},
 				requestUpdate: function (timeout) {
-					console.log('requesting update');
 					var self = this;
 					if (self.requestUpdateTimer) {
 						window.clearTimeout(self.requestUpdateTimer);
@@ -331,57 +426,42 @@
 						});
 					}, timeout);
 				},
-				setupMutationObserver: function (which) {
-
+				setupMutationObserver: function () {
 					var self = this;
-
-					if (self.mutationObserver) {
-						self.mutationObserver.disconnect();
-						self.mutationObserver = null;
-					}
-
-					var options = { childList: true, attributes: true, characterData: true, subtree: true };
-
-					// set up the initial watcher at the root of the document
-					if (which == 'initial') {
-						var func = function (mutation) {
-							if (mutation.target && mutation.target.className && mutation.target.className.indexOf('page_main_inner') !== -1) {
-								self.setupMutationObserver('final');
-							}
-						};
-						var el = document.body;
-					}
-					else if (which == 'final') {
-						var func = function (mutation) {
+					self.mutationObserver = new MutationObserver(function (mutations) {
+						mutations.some(function (mutation) {
 							if (mutation.type == 'characterData' || mutation.type == 'attributes') return;
 							if (mutation.target.className && mutation.target.className.indexOf('acit-timer') != -1) return;
 							if (mutation.target.className && mutation.target.className.indexOf('timer')) {
 								self.requestUpdate(100);
 								return true;
 							}
-						};
-						var el = document.getElementsByClassName('page_main_inner')[0];
-					}
-
-					if (func && el) {
-						self.mutationObserver = new MutationObserver(function (mutations) { mutations.some(func); });
-						self.mutationObserver.observe(el, options);
-					}
+						});
+					});
+					self.mutationObserver.observe(document.body, { childList: true, attributes: true, characterData: true, subtree: true });
 				}
 			};
 
-			TimerManager.setupMutationObserver('initial');
-
-			// tell the extension what the job types for this ActiveCollab server are
-			Server.do('sendJobTypes', { jobTypes: window.angie.collections.job_types }, function () {
-				console.log('job types sent!');
-			});
+			TimerManager.setupMutationObserver();
 
 			Server.on('update', function (payload) {
 				TimerManager.updateTimersProps(payload.timers);
 			});
 
+			$(document.body).click(function (e) {
+				if (TimerManager.timerForMenu && !$.contains(TimerManager.timerForMenu.el.base[0], e.target)) {
+					TimerManager.removeMenu();
+				}
+			});
+
 			window.setInterval(function () { TimerManager.renderTimers(); }, 1000);
+
+			window.setTimeout(function () {
+				// tell the extension what the job types for this ActiveCollab server are
+				Server.do('sendJobTypes', { jobTypes: window.angie.collections.job_types }, function () {
+					console.log('job types sent!');
+				});
+			}, 1000);
 
 			window.TimerManager = TimerManager;
 		});
