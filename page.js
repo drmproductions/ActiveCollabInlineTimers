@@ -14,12 +14,7 @@
 					try {
 						var module = eval('(function () { var module = { exports: {} }; (function() { ' + code + ' })(); return module.exports; })();');
 						modules.push(module);
-						if (++i == urls.length) {
-							cb.apply(this, modules);
-						}
-						else {
-							next();
-						}
+						if (++i == urls.length) cb.apply(this, modules); else next();
 					}
 					catch (e) {
 						console.error(e);
@@ -85,62 +80,71 @@
 	Server.setup();
 
 	// get the root url of our extension
-	Server.do('getExtensionUrl', {}, function (payload) {
+	Server.do('extension/get/url', {}, function (payload) {
 
 		// require our modules
 		require(payload.url + 'utils.js', function (utils) {
 
 			var NotificationManager = {
 				_notifications: [],
-				_genId: function (len) {
-					var id = "", c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-					for (var i = 0; i < len; i++) id += c.charAt(Math.floor(Math.random() * c.length));
-					return id;
-				},
 				_el: null,
 				setup: function () {
 					this._el = $('<div>').addClass('acit-notifications');
 					$(document.body).append(this._el);
 				},
-				create: function (content) {
-					var id = this._genId(32);
-					var el = $('<div>').addClass('acit-notifications-notification').html(content);
-					this._el.append(el);
-					this._notifications.push({ id: id, el: el });
-					return id;
-				},
-				update: function (id, content) {
-					this._notifications.some(function (notification, i, notifications) {
-						if (notification.id == id) {
-							notification.el.html(content);
-							return true;
-						}
-					});
-				},
-				clear: function (id) {
+				create: function (content, options) {
+
+					if (!options) options = {};
+					if (!Number.isInteger(options.lifespan)) options.lifespan = null;
+					if (options.dismissable === undefined) options.dismissable = false;
+
 					var self = this;
-					var notification = null;
-					self._notifications.some(function (n) {
-						if (n.id == id) { notification = n; return true; }
-					});
-					if (notification) {
-						notification.el.fadeOut(500, function () {
-							notification.el.css({ visibility: 'hidden', display: 'block' });
-							notification.el.slideUp(250, function () {
-								console.log('here!');
-								//notification.el.remove();
-								//self._notifications.splice(this._notifications.indexOf(notification), 1);
+					var notification = $('<div>')
+						.addClass('acit-notifications-notification')
+						.html([$('<span>').html(content)])
+						.fadeIn(500);
+
+					self._el.append(notification);
+					self._notifications.push(notification);
+
+					if (Number.isInteger(options.lifespan)) {
+						window.setTimeout(function () { self.clear(notification); }, options.lifespan);
+					}
+
+					if (options.dismissable) {
+						notification.append(
+							$('<div>').addClass('acit-notifications-notification-x noselect').html('x').click(function (e) {
+								self.clear(notification, 250);
+							})
+						);
+					}
+
+					return notification;
+				},
+				update: function (notification, content) {
+					notification.find('span').html(content);
+				},
+				clear: function (notification, options) {
+
+					if (!options) options = {};
+					if (!Number.isInteger(options.fadeSpeed)) options.fadeSpeed = 750;
+					if (!Number.isInteger(options.delay)) options.delay = 0;
+
+					var self = this;
+
+					window.setTimeout(function () {
+						notification.fadeOut(options.fadeSpeed, function () {
+							notification.css({ visibility: 'hidden', display: 'block' });
+							notification.slideUp(250, function () {
+								notification.remove();
+								self._notifications.splice(self._notifications.indexOf(notification), 1);
 							});
 						});
-					}
+					}, options.delay);
 				}
 			};
 
 			NotificationManager.setup();
-
-			var test = NotificationManager.create('Hello world!');
-			NotificationManager.create('Hello world 2!');
-			window.setTimeout(function () { NotificationManager.clear(test); }, 1000);
 
 			var TimerManager = {
 				timers: [],
@@ -179,9 +183,17 @@
 						self.menuElement = $('<div>');
 						timer.el.base.append([self.menuElement]);
 
-						Server.do('getMenuProps', { project: project, task: task }, function (payload) {
+						Server.do('menu/content', { project: project, task: task }, function (payload) {
 
-							var jobTypeEl = $('<div>').addClass('task_panel_property').html([
+							var jobTypeEl = $('<div>');
+							var billableEl = $('<div>');
+							var timeEl = $('<div>');
+							var descriptionEl = $('<div>');
+							var actionSubmitEl = $('<a>');
+							var actionResetEl = $('<a>');
+							var actionsEl = $('<div>');
+
+							jobTypeEl.addClass('task_panel_property').html([
 								$('<label>').html('Job Type'),
 								$('<select>')
 									.addClass('acit-timer-menu-dropdown-select')
@@ -189,7 +201,7 @@
 										return $('<option>').val(jobType.id).html(jobType.name).attr('selected', (payload.jobTypeId == jobType.id ? 'selected' : null));
 									}))
 									.change(function () {
-										Server.do('timerSetJobType', {
+										Server.do('timer/set/jobType', {
 											project: project,
 											task: task,
 											value: parseInt(this.value)
@@ -197,7 +209,7 @@
 									})
 							]);
 
-							var billableEl = $('<div>').addClass('task_panel_property').html([
+							billableEl.addClass('task_panel_property').html([
 								$('<label>').html('Billable'),
 								$('<select>')
 									.addClass('acit-timer-menu-dropdown-select')
@@ -206,7 +218,7 @@
 										$('<option>').val('0').html('No').attr('selected', (!payload.billable ? 'selected' : null))
 									])
 									.change(function () {
-										Server.do('timerSetBillable', {
+										Server.do('timer/set/billable', {
 											project: project,
 											task: task,
 											value: (this.value === '1')
@@ -214,13 +226,13 @@
 									})
 							]);
 
-							var timeEl = $('<div>').addClass('task_panel_property').html([
+							timeEl.addClass('task_panel_property').html([
 								$('<label>').html('Time'),
 								$('<input>').addClass('acit-timer-menu-dropdown-input')
 								.val(payload.formattedTime)
 								.keyup(function (e) {
 									var self = this;
-									Server.do('timerSetTime', {
+									Server.do('timer/set/time', {
 										project: project,
 										task: task,
 										value: this.value
@@ -232,24 +244,46 @@
 								}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
 							]);
 
-							var descriptionEl = $('<div>').addClass('task_panel_property').html([
+							descriptionEl.addClass('task_panel_property').html([
 								$('<label>').html('Description'),
 								$('<textarea>').addClass('acit-timer-menu-dropdown-input').val(payload.summary).keyup(function (e) {
-									Server.do('timerSetSummary', { project: project, task: task, value: this.value });
+									Server.do('timer/set/summary', { project: project, task: task, value: this.value });
 									e.preventDefault();
 								}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
 							]);
 
-							var actionsEl = $('<div>').addClass('task_panel_actions').html([
-								$('<a>').attr('href', "#").html('Submit').click(function () {
-									TimerManager.submitTimer(project, task);
-									TimerManager.removeMenu();
-								}),
-								$('<a>').attr('href', "#").html('Reset').click(function () {
-									Server.do('timerStop', { project: project, task: task });
-									TimerManager.removeMenu();
-								})
-							]);
+							actionSubmitEl.attr('href', "#").html('Submit').click(function () {
+								Server.do('timers/submittable', { timers: [{ project: project, task: task }] }, function (payload) {
+									if (payload.timerPayloads.length < 1) {
+										NotificationManager.create('Timer does not need submitted', { dismissable: true });
+										return;
+									}
+									NotificationManager.create('Submitting timer', { lifespan: 1500 });
+									TimerManager.submitTimers({
+										timerPayloads: payload.timerPayloads,
+										submitted: function (index) {},
+										completed: function (err) {
+											if (err) {
+												NotificationManager.create('Error while submitting timers', { dismissable: true });
+											}
+											else {
+												Server.do('timers/stop', { timers: [{ project: project, task: task }] }, function (payload) {
+													NotificationManager.create('Timer successfully submitted!', { lifespan: 1500 });
+												});
+											}
+										}
+									});
+								});
+
+								TimerManager.removeMenu();
+							});
+
+							actionResetEl.attr('href', "#").html('Reset').click(function () {
+								Server.do('timer/stop', { project: project, task: task });
+								TimerManager.removeMenu();
+							})
+
+							actionsEl.addClass('task_panel_actions').html([ actionSubmitEl, actionResetEl ]);
 
 							self.menuElement
 								.addClass('acit-timer-menu-dropdown popover task_popover')
@@ -265,13 +299,6 @@
 								]);
 						});
 					}
-				},
-				getSendableTimers: function () {
-					var basicTimers = [];
-					this.timers.forEach(function (timer) {
-						basicTimers.push({ project: timer.project, task: timer.task });
-					});
-					return basicTimers;
 				},
 				checkTimerOnDOM: function (project, task) {
 					return $.contains(document.body, this.getTimer(project, task).el.base[0]);
@@ -299,6 +326,11 @@
 					timer.el.menu = $('<button>');
 					timer.el.time = $('<div>');
 
+					// the task needs to be at an offset on individual project pages
+					if (window.location.pathname.match(/(\/projects\/)([0-9]*)/g)) {
+						parentEl.css('paddingLeft', '100px');
+					}
+
 					parentEl.append(timer.el.base.html([timer.el.time, timer.el.menu]));
 
 					timer.el.base.addClass('acit-timer');
@@ -315,7 +347,7 @@
 						.addClass('acit-timer-time')
 						.html('00:00')
 						.click(function (e) {
-							Server.do('timerClicked', { project: project, task: task });
+							Server.do('timer/clicked', { project: project, task: task });
 							e.stopPropagation();
 						});
 
@@ -359,6 +391,15 @@
 				},
 				updateTimersProps: function (timers) {
 					var self = this;
+					// restart from a blank slate
+					self.timers.forEach(function (timer) {
+						// we need to do this because we don't actually store stopped timers
+						// so any timers client side that didn't get passed down, won't update in the UI here
+						timer.state = 'stopped';
+						timer.total = 0;
+						timer.start = 0;
+					});
+					// now apply the property updates from the server
 					timers.forEach(function (t) {
 						var timer = self.getTimer(t.project, t.task);
 						if (timer) {
@@ -388,29 +429,39 @@
 						timer.el.time.html(html);
 					});
 				},
-				submitTimer: function (project, task) {
-					var notificationId = NotificationManager.create('Submitting timer');
-					Server.do('timerSubmittableData', { project: project, task: task }, function (payload) {
-						payload.user_id = angie.user_session_data.logged_user_id;
-						fetch('http://projects.drminc.com/api/v1/projects/' + project + '/time-records', {
-							method: 'POST',
-							credentials: 'include',
-							headers: {
-								'X-Angie-CsrfValidator': window.getCsrfCookie(),
-								'Content-Type': 'application/json'
-							},
-							body: JSON.stringify(payload)
-						})
-						.then(function (response) { return response.json(); })
-						.then(function (json) {
-							Server.do('timerSubmitted', { project: project, task: task }, function () {
-								NotificationManager.update(notificationId, 'Time successfully submitted!');
-								window.setTimeout(function () {
-									NotificationManager.clear(notificationId);
-								}, 1500);
+				submitTimer: function (timerPayload, cb) {
+					var project = timerPayload.project_id;
+					delete timerPayload.project_id;
+					timerPayload.user_id = angie.user_session_data.logged_user_id;
+					fetch('http://projects.drminc.com/api/v1/projects/' + project + '/time-records', {
+						method: 'POST',
+						credentials: 'include',
+						headers: {
+							'X-Angie-CsrfValidator': window.getCsrfCookie(),
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(timerPayload)
+					})
+					.then(function (response) { return response.json(); })
+					.then(function (json) { cb(null); })
+					.catch(function (ex) { cb(ex); });
+				},
+				submitTimers: function (options) {
+					var self = this;
+					utils.waterfall(options.timerPayloads.map(function (timerPayload, i) {
+						return function (next) {
+							self.submitTimer(timerPayload, function (err) {
+								if (err) {
+									next(err);
+								}
+								else {
+									options.submitted(i);
+									next(null);
+								}
 							});
-						})
-						.catch(function (ex) { throw new Error(ex); });
+						};
+					}), function (err) {
+						options.completed(err);
 					});
 				},
 				requestUpdate: function (timeout) {
@@ -421,7 +472,7 @@
 					}
 					self.requestUpdateTimer = window.setTimeout(function () {
 						self.updateTimersList();
-						Server.do('updateMe', {}, function (payload) {
+						Server.do('timers/states', {}, function (payload) {
 							self.updateTimersProps(payload.timers);
 						});
 					}, timeout);
@@ -429,10 +480,17 @@
 				setupMutationObserver: function () {
 					var self = this;
 					self.mutationObserver = new MutationObserver(function (mutations) {
+						// these two selectors / css changes fix the offset that is caused when we add
+						// paddingLeft to the parent 'task' element of the timers on the /projects/* pages
+						$('.project_tasks_add_wrapper').each(function () {
+							$(this).find('.project_tasks_add').find('span').css('marginLeft', -70);
+							$(this).find('.slim_form_left_column').css('marginLeft', -70);
+						});
 						mutations.some(function (mutation) {
-							if (mutation.type == 'characterData' || mutation.type == 'attributes') return;
-							if (mutation.target.className && mutation.target.className.indexOf('acit-timer') != -1) return;
-							if (mutation.target.className && mutation.target.className.indexOf('timer')) {
+							if (mutation.type == 'characterData' || mutation.type == 'attributes' || !mutation.target.className) return;
+							var className = mutation.target.className;
+							if (className.indexOf('acit-timer') !== -1) return;
+							if (className.indexOf('timer')) {
 								self.requestUpdate(100);
 								return true;
 							}
@@ -444,8 +502,70 @@
 
 			TimerManager.setupMutationObserver();
 
-			Server.on('update', function (payload) {
+			Server.on('timers/changed', function (payload) {
 				TimerManager.updateTimersProps(payload.timers);
+			});
+
+			Server.on('timers/reset/all', function (payload) {
+				Server.do('timers/stop', { timers: [] });
+			});
+
+			Server.on('timers/reset/current', function (payload) {
+				Server.do('timers/stop', { timers: utils.getSendableTimers(TimerManager.timers) });
+			});
+
+			Server.on('timers/submit/all', function (payload) {
+				Server.do('timers/submittable', { timers: [] }, function (payload) {
+					if (payload.timerPayloads.length < 1) {
+						NotificationManager.create('No timers to submit', { dismissable: true });
+						return;
+					}
+					NotificationManager.create('Submitting all ' + payload.timerPayloads.length + ' timers', { lifespan: 1500 });
+					TimerManager.submitTimers({
+						timerPayloads: payload.timerPayloads,
+						submitted: function (index) {
+							NotificationManager.create('Submitted ' + (index + 1) + ' of ' + payload.timerPayloads.length + ' timers', { lifespan: 1000 });
+						},
+						completed: function (err) {
+							if (err) {
+								NotificationManager.create('Error while submitting timers', { dismissable: true });
+							}
+							else {
+								Server.do('timers/stop', { timers: [] }, function (payload) {
+									NotificationManager.create('Timers successfully submitted!', { lifespan: 1500 });
+								});
+							}
+						}
+					});
+				});
+			});
+
+			Server.on('timers/submit/current', function (payload) {
+				var timers = utils.getSendableTimers(TimerManager.timers);
+				Server.do('timers/submittable', { timers: timers }, function (payload) {
+					if (payload.timerPayloads.length < 1) {
+						NotificationManager.create('No timers to submit', { dismissable: true });
+						return;
+					}
+					NotificationManager.create('Submitting the ' + payload.timerPayloads.length + ' timers on this page', { lifespan: 1500 });
+					TimerManager.submitTimers({
+						timerPayloads: payload.timerPayloads,
+						submitted: function (index) {
+							NotificationManager.create('Submitted ' + (index + 1) + ' of ' + payload.timerPayloads.length + ' timers', { lifespan: 1000 });
+						},
+						completed: function (err) {
+							if (err) {
+								NotificationManager.clear(notification);
+								NotificationManager.create('Error while submitting timers', { dismissable: true });
+							}
+							else {
+								Server.do('timers/stop', { timers: timers }, function (payload) {
+									NotificationManager.create('Timers successfully submitted!', { lifespan: 1500 });
+								});
+							}
+						}
+					});
+				});
 			});
 
 			$(document.body).click(function (e) {
@@ -458,11 +578,13 @@
 
 			window.setTimeout(function () {
 				// tell the extension what the job types for this ActiveCollab server are
-				Server.do('sendJobTypes', { jobTypes: window.angie.collections.job_types }, function () {
+				Server.do('session/jobTypes/set', { jobTypes: window.angie.collections.job_types }, function () {
 					console.log('job types sent!');
 				});
 			}, 1000);
 
+			// for development purposes
+			window.NotificationManager = NotificationManager;
 			window.TimerManager = TimerManager;
 		});
 	});

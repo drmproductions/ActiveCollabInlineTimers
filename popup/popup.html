@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+	<head>
+		<title>ActiveCollabInlineTimers</title>
+		<link href="popup.css" type="text/css" rel="stylesheet">
+		<script src="popup.js"></script>
+	</head>
+	<body>
+		<div id="no_injection" class="group" style="border-top: none; padding: 0;">
+			<p id="message">
+				<span>Please visit an Active Collab tab</span>
+				<br><br>
+				<span>If you just installed an update for this extension, please refresh your Active Collab tabs.</span>
+			</p>
+		</div>
+		<div id="injection" style="display: none;">
+			<div class="group" style="padding-top: 10px;">
+				<label>Default Job Type</label>
+				<select id="pref_jobTypeId"></select>
+			</div>
+			<div class="group">
+				<label>Default Is Billable</label>
+				<select id="pref_billable">
+					<option value="1">Yes</option>
+					<option value="0">No</option>
+				</select>
+			</div>
+			<div class="group">
+				<label>Rounding Interval</label>
+				<select id="pref_roundingInterval">
+					<option value="0">Don't Round</option>
+					<option value="900000">15 minutes</option>
+					<option value="1800000">30 minutes</option>
+					<option value="3600000">60 minutes</option>
+				</select>
+			</div>
+			<div class="group" style="padding-bottom: 10px;">
+				<label>Minimum Entry</label>
+				<select id="pref_minimumEntry">
+					<option value="0">0 minutes</option>
+					<option value="900000">15 minutes</option>
+					<option value="1800000">30 minutes</option>
+					<option value="2700000">45 minutes</option>
+					<option value="3600000">60 minutes</option>
+				</select>
+			</div>
+			<div class="group actions">
+				<label>Reset Timers</label>
+				<a id="action_timersResetAllPages">All pages</a>
+				<a id="action_timersResetCurrentPage">Current page</a>
+			</div>
+			<div class="group actions" style="background-color: white;">
+				<label>Submit Timers</label>
+				<a id="action_timersSubmitAllPages">All pages</a>
+				<a id="action_timersSubmitCurrentPage">Current page</a>
+			</div>
+		</div>
+	</body>
+</html>
