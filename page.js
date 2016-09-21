@@ -292,7 +292,7 @@
 									$('<div>').addClass('popover_inner').html(
 										$('<div>').addClass('popover_content').html(
 											$('<div>').addClass('task_panel_popover').attr('tabindex', 0).html([
-												jobTypeEl, billableEl, timeEl, descriptionEl, actionsEl
+												timeEl, jobTypeEl, billableEl, descriptionEl, actionsEl
 											])
 										)
 									)
@@ -341,14 +341,21 @@
 							if (e.target != timer.el.menu[0]) return;
 							e.stopPropagation();
 							self.showMenu(project, task);
+						})
+						.dblclick(function (e) {
+							e.stopPropagation();
+							e.preventDefault();
 						});
 
 					timer.el.time
-						.addClass('acit-timer-time')
+						.addClass('acit-timer-time noselect')
 						.html('00:00')
 						.click(function (e) {
 							Server.do('timer/clicked', { project: project, task: task });
+						})
+						.dblclick(function (e) {
 							e.stopPropagation();
+							e.preventDefault();
 						});
 
 					self.timers.push(timer);
@@ -569,7 +576,7 @@
 			});
 
 			$(document.body).click(function (e) {
-				if (TimerManager.timerForMenu && !$.contains(TimerManager.timerForMenu.el.base[0], e.target)) {
+				if (TimerManager.timerForMenu && !$.contains(TimerManager.timerForMenu.el.base.find('.acit-timer-menu-dropdown')[0], e.target)) {
 					TimerManager.removeMenu();
 				}
 			});
