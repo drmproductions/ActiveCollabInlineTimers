@@ -144,7 +144,7 @@ require(chrome.extension.getURL('utils.js'), function (utils) {
 	// gets called when the client tells us about their jobTypes
 	Clients.on('session/jobTypes/set', function (request, respond, session) {
 		session.jobTypes = request.payload.jobTypes;
-		session.prefs.jobTypeId = utils.getDefaultJobTypeId(session.jobTypes);
+		session.prefs.jobTypeId = utils.getDefaultJobTypeId(session);
 		Session.save(request.hostname, session, function () {
 			respond({ thank: 'you :)' });
 		});

@@ -20,13 +20,23 @@ module.exports = {
 		return result;
 	},
 
-	getDefaultJobTypeId: function (jobTypes) {
+	getDefaultJobTypeId: function (session) {
+
 		var defaultJobTypeId = null;
-		jobTypes.forEach(function (jobType) {
+
+		// if session.prefs.jobTypeId is set, but it's not a jobType anymore, we use the lowest job type available
+		session.jobTypes.some(function (jobType) {
+			// use the jobtype in our prefs if its set
+			if (jobType.id == session.prefs.jobTypeId) {
+				defaultJobTypeId = session.prefs.jobTypeId;
+				return true;
+			}
+			// otherwise we use the lowest jobtype
 			if (defaultJobTypeId == null || jobType.id < defaultJobTypeId) {
 				defaultJobTypeId = jobType.id;
 			}
 		});
+
 		return defaultJobTypeId;
 	},
 
