@@ -1,10 +1,8 @@
 .acit-timer {
+	position: absolute;
 	width: 172px;
-	left: -178px;
-	margin-right: -178px;
-	float: left;
-	position: relative;
-	top: -25px;
+	left: 0;
+	top: 2px;
 	height: 19px;
 	line-height: 17px;
 	clear: right;
@@ -137,6 +135,12 @@
 
 .profile_page .profile_page_tasks .profile_page_section_group .profile_page_section_group_label {
 	padding-bottom: 0.5em;
+}
+
+/* Active Collab style overrides */
+
+.task_list .task {
+	position: relative;
 }
 
 .task_list_group:first-of-type .task_list:not(.subtask_list) {

@@ -149,8 +149,8 @@
 			var TimerManager = {
 				timers: [],
 				menuElement: null,
+				menuPropCache: null,
 				timerForMenu: null,
-				requestUpdateTimer: null,
 				mutationObserver: null,
 				removeMenu: function (e) {
 					if (TimerManager.timerForMenu) {
@@ -159,6 +159,28 @@
 						TimerManager.menuElement = null;
 						TimerManager.timerForMenu = null;
 					}
+				},
+				refreshMenu: function (project, task) {
+					var self = this;
+					Server.do('menu/content', { project: project, task: task }, function (payload) {
+
+						self.menuElement.find('.acit-timer-menu-dropdown-jobType select').html(
+							window.angie.collections.job_types.map(function (jobType) {
+								return $('<option>').val(jobType.id).html(jobType.name).attr('selected', (payload.jobTypeId == jobType.id ? 'selected' : null));
+							})
+						);
+
+						self.menuElement.find('.acit-timer-menu-dropdown-summary textarea').val(payload.summary);
+
+						self.menuElement.find('.acit-timer-menu-dropdown-billable select').html([
+							$('<option>').val('1').html('Yes').attr('selected', (payload.billable ? 'selected' : null)),
+							$('<option>').val('0').html('No').attr('selected', (!payload.billable ? 'selected' : null))
+						]);
+
+						self.menuElement.find('.acit-timer-menu-dropdown-timer input').val(payload.formattedTime);
+
+						self.menuPropCache = payload;
+					});
 				},
 				showMenu: function (project, task) {
 
@@ -183,125 +205,177 @@
 						self.menuElement = $('<div>');
 						timer.el.base.append([self.menuElement]);
 
-						Server.do('menu/content', { project: project, task: task }, function (payload) {
+						var jobTypeEl = $('<div>');
+						var billableEl = $('<div>');
+						var timeEl = $('<div>');
+						var summaryEl = $('<div>');
+						var actionSubmitEl = $('<a>');
+						var actionResetEl = $('<a>');
+						var actionsEl = $('<div>');
 
-							var jobTypeEl = $('<div>');
-							var billableEl = $('<div>');
-							var timeEl = $('<div>');
-							var descriptionEl = $('<div>');
-							var actionSubmitEl = $('<a>');
-							var actionResetEl = $('<a>');
-							var actionsEl = $('<div>');
-
-							jobTypeEl.addClass('task_panel_property').html([
-								$('<label>').html('Job Type'),
-								$('<select>')
-									.addClass('acit-timer-menu-dropdown-select')
-									.html(window.angie.collections.job_types.map(function (jobType) {
-										return $('<option>').val(jobType.id).html(jobType.name).attr('selected', (payload.jobTypeId == jobType.id ? 'selected' : null));
-									}))
-									.change(function () {
-										Server.do('timer/set/jobType', {
-											project: project,
-											task: task,
-											value: parseInt(this.value)
-										});
-									})
-							]);
-
-							billableEl.addClass('task_panel_property').html([
-								$('<label>').html('Billable'),
-								$('<select>')
-									.addClass('acit-timer-menu-dropdown-select')
-									.html([
-										$('<option>').val('1').html('Yes').attr('selected', (payload.billable ? 'selected' : null)),
-										$('<option>').val('0').html('No').attr('selected', (!payload.billable ? 'selected' : null))
-									])
-									.change(function () {
-										Server.do('timer/set/billable', {
-											project: project,
-											task: task,
-											value: (this.value === '1')
-										});
-									})
-							]);
-
-							timeEl.addClass('task_panel_property').html([
-								$('<label>').html('Time'),
-								$('<input>').addClass('acit-timer-menu-dropdown-input')
-								.val(payload.formattedTime)
-								.keyup(function (e) {
-									var self = this;
-									Server.do('timer/set/time', {
+						jobTypeEl.addClass('acit-timer-menu-dropdown-jobType task_panel_property').html([
+							$('<label>').html('Job Type'),
+							$('<select>')
+								.addClass('acit-timer-menu-dropdown-select')
+								.html(self.menuPropCache ? window.angie.collections.job_types.map(function (jobType) {
+									return $('<option>').val(jobType.id).html(jobType.name).attr('selected', (self.menuPropCache.jobTypeId == jobType.id ? 'selected' : null));
+								}) : [])
+								.change(function () {
+									Server.do('timer/set/jobType', {
 										project: project,
 										task: task,
-										value: this.value
-									}, function (payload) {
-										self.style.outlineColor = (payload.valid ? null : 'red');
+										value: parseInt(this.value)
 									});
-									if (e.keyCode == 13) TimerManager.removeMenu();
-									e.preventDefault();
-								}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
-							]);
+								})
+						]);
 
-							descriptionEl.addClass('task_panel_property').html([
-								$('<label>').html('Description'),
-								$('<textarea>').addClass('acit-timer-menu-dropdown-input').val(payload.summary).keyup(function (e) {
+						summaryEl.addClass('acit-timer-menu-dropdown-summary task_panel_property').html([
+							$('<label>').html('Description'),
+							$('<textarea>').addClass('acit-timer-menu-dropdown-input')
+								.val(self.menuPropCache ? self.menuPropCache.summary : '')
+								.keyup(function (e) {
 									Server.do('timer/set/summary', { project: project, task: task, value: this.value });
 									e.preventDefault();
-								}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
-							]);
+								})
+								.dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
+						]);
 
-							actionSubmitEl.attr('href', "#").html('Submit').click(function () {
-								Server.do('timers/submittable', { timers: [{ project: project, task: task }] }, function (payload) {
-									if (payload.timerPayloads.length < 1) {
-										NotificationManager.create('Timer does not need submitted', { dismissable: true });
-										return;
-									}
-									NotificationManager.create('Submitting timer', { lifespan: 1500 });
-									TimerManager.submitTimers({
-										timerPayloads: payload.timerPayloads,
-										submitted: function (index) {},
-										completed: function (err) {
-											if (err) {
-												NotificationManager.create('Error while submitting timers', { dismissable: true });
-											}
-											else {
-												Server.do('timers/stop', { timers: [{ project: project, task: task }] }, function (payload) {
-													NotificationManager.create('Timer successfully submitted!', { lifespan: 1500 });
-												});
-											}
-										}
+						billableEl.addClass('acit-timer-menu-dropdown-billable task_panel_property').html([
+							$('<label>').html('Billable'),
+							$('<select>')
+								.addClass('acit-timer-menu-dropdown-select')
+								.html(self.menuPropCache ? [
+									$('<option>').val('1').html('Yes').attr('selected', (self.menuPropCache.billable ? 'selected' : null)),
+									$('<option>').val('0').html('No').attr('selected', (!self.menuPropCache.billable ? 'selected' : null))
+								] : [])
+								.change(function () {
+									Server.do('timer/set/billable', {
+										project: project,
+										task: task,
+										value: (this.value === '1')
 									});
-								});
+								})
+						]);
 
-								TimerManager.removeMenu();
+						timeEl.addClass('acit-timer-menu-dropdown-timer task_panel_property').html([
+							$('<label>').html('Time'),
+							$('<input>').addClass('acit-timer-menu-dropdown-input')
+							.val(self.menuPropCache ? self.menuPropCache.formattedTime : '')
+							.keyup(function (e) {
+								var self = this;
+								Server.do('timer/set/time', {
+									project: project,
+									task: task,
+									value: this.value
+								}, function (payload) {
+									self.style.outlineColor = (payload.valid ? null : 'red');
+								});
+								if (e.keyCode == 13) TimerManager.removeMenu();
+								e.preventDefault();
+							}).dblclick(function (e) { e.stopPropagation(); e.preventDefault(); })
+						]);
+
+						actionSubmitEl.attr('href', "#").html('Submit').click(function () {
+							Server.do('timers/submittable', { timers: [{ project: project, task: task }] }, function (payload) {
+								if (payload.timerPayloads.length < 1) {
+									NotificationManager.create('Timer does not need submitted', { dismissable: true });
+									return;
+								}
+								NotificationManager.create('Submitting timer', { lifespan: 1500 });
+								TimerManager.submitTimers({
+									timerPayloads: payload.timerPayloads,
+									submitted: function (index) {},
+									completed: function (err) {
+										if (err) {
+											NotificationManager.create('Error while submitting timers', { dismissable: true });
+										}
+										else {
+											Server.do('timers/stop', { timers: [{ project: project, task: task }] }, function (payload) {
+												NotificationManager.create('Timer successfully submitted!', { lifespan: 1500 });
+											});
+										}
+									}
+								});
 							});
 
-							actionResetEl.attr('href', "#").html('Reset').click(function () {
-								Server.do('timer/stop', { project: project, task: task });
-								TimerManager.removeMenu();
-							})
-
-							actionsEl.addClass('task_panel_actions').html([ actionSubmitEl, actionResetEl ]);
-
-							self.menuElement
-								.addClass('acit-timer-menu-dropdown popover task_popover')
-								.html([
-									$('<div>').addClass('popover_arrow').css({ left: '50%' }),
-									$('<div>').addClass('popover_inner').html(
-										$('<div>').addClass('popover_content').html(
-											$('<div>').addClass('task_panel_popover').attr('tabindex', 0).html([
-												timeEl, jobTypeEl, billableEl, descriptionEl, actionsEl
-											])
-										)
-									)
-								]);
+							TimerManager.removeMenu();
 						});
+
+						actionResetEl.attr('href', "#").html('Reset').click(function () {
+							Server.do('timer/stop', { project: project, task: task });
+							TimerManager.removeMenu();
+						})
+
+						actionsEl.addClass('task_panel_actions').html([ actionSubmitEl, actionResetEl ]);
+
+						self.menuElement
+							.addClass('acit-timer-menu-dropdown popover task_popover')
+							.html([
+								$('<div>').addClass('popover_arrow').css({ left: '50%' }),
+								$('<div>').addClass('popover_inner').html(
+									$('<div>').addClass('popover_content').html(
+										$('<div>').addClass('task_panel_popover').attr('tabindex', 0).html([
+											timeEl, summaryEl, jobTypeEl, billableEl, actionsEl
+										])
+									)
+								)
+							]);
+
+						self.refreshMenu(project, task);
 					}
 				},
 				checkTimerOnDOM: function (project, task) {
 					return $.contains(document.body, this.getTimer(project, task).el.base[0]);
+				},
+				addTimerToDom: function (project, task, parentEl) {
+					var self = this;
+					var timer = self.getTimer(project, task);
+					if (timer) {
+
+						timer.el.base = $('<div>');
+						timer.el.menu = $('<button>');
+						timer.el.time = $('<div>');
+
+						parentEl.append(timer.el.base.html([timer.el.time, timer.el.menu]));
+
+						// the task needs to be at an offset on individual project pages
+						if (window.location.pathname.match(/(\/projects\/)([0-9]*)/g)) {
+							parentEl.css({ paddingLeft: '100px' });
+							timer.el.base.css({ marginLeft: '-78px' });
+						}
+						else {
+							timer.el.base.css({ marginLeft: '-180px' });
+						}
+
+						timer.el.base.addClass('acit-timer');
+
+						timer.el.menu
+							.addClass('acit-timer-menu icon icon_options_dropdown_black')
+							.click(function (e) {
+								if (e.target != timer.el.menu[0]) return;
+								e.stopPropagation();
+								self.showMenu(project, task);
+							})
+							.dblclick(function (e) {
+								e.stopPropagation();
+								e.preventDefault();
+							});
+
+						timer.el.time
+							.addClass('acit-timer-time noselect')
+							.html('00:00')
+							.click(function (e) {
+								Server.do('timer/clicked', { project: project, task: task });
+							})
+							.dblclick(function (e) {
+								e.stopPropagation();
+								e.preventDefault();
+							});
+
+						if (self.timerForMenu) {
+							self.showMenu(self.timerForMenu.project, self.timerForMenu.task);
+						}
+					}
 				},
 				getTimer: function (project, task) {
 					var result = null;
@@ -319,46 +393,12 @@
 
 					var timer = { el: {} };
 
+					self.timers.push(timer);
+
 					timer.project = project;
 					timer.task = task;
 
-					timer.el.base = $('<div>');
-					timer.el.menu = $('<button>');
-					timer.el.time = $('<div>');
-
-					// the task needs to be at an offset on individual project pages
-					if (window.location.pathname.match(/(\/projects\/)([0-9]*)/g)) {
-						parentEl.css('paddingLeft', '100px');
-					}
-
-					parentEl.append(timer.el.base.html([timer.el.time, timer.el.menu]));
-
-					timer.el.base.addClass('acit-timer');
-
-					timer.el.menu
-						.addClass('acit-timer-menu icon icon_options_dropdown_black')
-						.click(function (e) {
-							if (e.target != timer.el.menu[0]) return;
-							e.stopPropagation();
-							self.showMenu(project, task);
-						})
-						.dblclick(function (e) {
-							e.stopPropagation();
-							e.preventDefault();
-						});
-
-					timer.el.time
-						.addClass('acit-timer-time noselect')
-						.html('00:00')
-						.click(function (e) {
-							Server.do('timer/clicked', { project: project, task: task });
-						})
-						.dblclick(function (e) {
-							e.stopPropagation();
-							e.preventDefault();
-						});
-
-					self.timers.push(timer);
+					self.addTimerToDom(project, task, parentEl);
 
 					return timer;
 				},
@@ -373,13 +413,12 @@
 							var project = parseInt(split[1]);
 							var task = parseInt(split[3].split('?')[0]);
 							var timer = self.getTimer(project, task);
+							var parentEl = $(this).find('.task_view_mode').parent();
 							if (!timer) {
-								self.addTimer(project, task, $(this).find('.task_view_mode').parent());
+								self.addTimer(project, task, parentEl);
 							}
 							else if (!self.checkTimerOnDOM(project, task)) {
-								timer.el.base.remove();
-								self.timers.splice(self.timers.indexOf(timer), 1);
-								self.addTimer(project, task, $(this).find('.task_view_mode').parent());
+								self.addTimerToDom(project, task, parentEl);
 							}
 							timersOnDOM.push({ project: project, task: task });
 						}
@@ -395,6 +434,8 @@
 							timers.splice(i, 1);
 						}
 					});
+
+					self.renderTimers();
 				},
 				updateTimersProps: function (timers) {
 					var self = this;
@@ -473,32 +514,22 @@
 				},
 				requestUpdate: function (timeout) {
 					var self = this;
-					if (self.requestUpdateTimer) {
-						window.clearTimeout(self.requestUpdateTimer);
-						self.requestUpdateTimer = null;
-					}
-					self.requestUpdateTimer = window.setTimeout(function () {
-						self.updateTimersList();
-						Server.do('timers/states', {}, function (payload) {
-							self.updateTimersProps(payload.timers);
-						});
-					}, timeout);
+					self.updateTimersList();
+					Server.do('timers/states', {}, function (payload) {
+						console.log('got states back from server');
+						self.updateTimersProps(payload.timers);
+					});
 				},
 				setupMutationObserver: function () {
 					var self = this;
 					self.mutationObserver = new MutationObserver(function (mutations) {
-						// these two selectors / css changes fix the offset that is caused when we add
-						// paddingLeft to the parent 'task' element of the timers on the /projects/* pages
-						$('.project_tasks_add_wrapper').each(function () {
-							$(this).find('.project_tasks_add').find('span').css('marginLeft', -70);
-							$(this).find('.slim_form_left_column').css('marginLeft', -70);
-						});
+						$('.task.ui-sortable-helper').css('z-index', 9999999);
 						mutations.some(function (mutation) {
 							if (mutation.type == 'characterData' || mutation.type == 'attributes' || !mutation.target.className) return;
 							var className = mutation.target.className;
 							if (className.indexOf('acit-timer') !== -1) return;
 							if (className.indexOf('timer')) {
-								self.requestUpdate(100);
+								self.requestUpdate(10);
 								return true;
 							}
 						});
