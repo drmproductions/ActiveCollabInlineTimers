@@ -40,7 +40,7 @@ require(chrome.extension.getURL('utils.js'), function (utils) {
 					session[hostname] = {
 						prefs: {
 							jobTypeId: null,
-							billable: false,
+							billable: true,
 							roundingInterval: 0,
 							minimumEntry: 0
 						}
