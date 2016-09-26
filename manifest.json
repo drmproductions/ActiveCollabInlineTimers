@@ -3,7 +3,7 @@
 	"name": "ActiveCollabInlineTimers",
 	"description": "Adds inline timers to the \"My Work\" and \"Project\" pages",
 	"version": "0.8",
-	"author": "luveti",
+	"author": "Cameron Kline of DRM Productions",
 	"permissions": ["tabs", "activeTab", "webNavigation", "storage", "*://*/*"],
 	"background": {"scripts": ["server.js"], "persistent": true},
 	"content_scripts": [{"matches": ["*://*/*"], "js": ["client.js"], "run_at": "document_end"}],

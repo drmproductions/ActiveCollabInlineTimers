@@ -309,7 +309,7 @@ require(chrome.extension.getURL('utils.js'), function (utils) {
 				summary: timer.summary,
 				task_id: timer.task,
 				project_id: timer.project,
-				value: utils.formattedTime(timer, session.prefs.roundingInterval, session.prefs.minimumEntry, true)
+				value: utils.formattedTime(timer, session.prefs.roundingInterval, session.prefs.minimumEntry)
 			};
 		});
 

@@ -508,7 +508,7 @@
 					options.completed(err);
 				});
 			},
-			requestUpdate: function (timeout) {
+			requestUpdate: function () {
 				var self = this;
 				self.updateTimersList();
 				Server.do('timers/states', {}, function (payload) {
@@ -524,7 +524,7 @@
 						var className = mutation.target.className;
 						if (className.indexOf('acit-timer') !== -1) return;
 						if (className.indexOf('timer')) {
-							self.requestUpdate(10);
+							self.requestUpdate();
 							return true;
 						}
 					});
@@ -532,8 +532,6 @@
 				self.mutationObserver.observe(document.body, { childList: true, attributes: true, characterData: true, subtree: true });
 			}
 		};
-
-		TimerManager.setupMutationObserver();
 
 		Server.on('timers/changed', function (payload) {
 			TimerManager.updateTimersProps(payload.timers);
@@ -609,12 +607,20 @@
 
 		window.setInterval(function () { TimerManager.renderTimers(); }, 1000);
 
-		window.setTimeout(function () {
-			// tell the extension what the job types for this ActiveCollab server are
-			Server.do('session/jobTypes/set', { jobTypes: window.angie.collections.job_types }, function () {
-				console.log('job types sent!');
-			});
-		}, 1000);
+		// ensure we send the job types only once they've been set
+		var trySendingJobTypesInterval = window.setInterval(function () {
+			if (window.angie && window.angie.collections && window.angie.collections.job_types) {
+
+				// tell the extension what the job types for this ActiveCollab server are
+				Server.do('session/jobTypes/set', { jobTypes: window.angie.collections.job_types }, function () {
+					// once we've updated the server, begin doing stuff
+					TimerManager.setupMutationObserver();
+					TimerManager.requestUpdate();
+				});
+
+				window.clearInterval(trySendingJobTypesInterval);
+			}
+		}, 500);
 
 		// for development purposes
 		window.NotificationManager = NotificationManager;
