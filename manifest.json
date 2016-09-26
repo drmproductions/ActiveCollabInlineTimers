@@ -1,14 +1,20 @@
 {
 	"manifest_version": 2,
 	"name": "ActiveCollabInlineTimers",
-	"description": "Adds inline timers to the \"My Work\" and \"Project\" pages",
-	"version": "0.8",
-	"author": "Cameron Kline of DRM Productions",
-	"permissions": ["tabs", "activeTab", "webNavigation", "storage", "*://*/*"],
-	"background": {"scripts": ["server.js"], "persistent": true},
-	"content_scripts": [{"matches": ["*://*/*"], "js": ["client.js"], "run_at": "document_end"}],
-	"web_accessible_resources": ["utils.js", "page.js", "page.css"],
-	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+	"version": "1.0",
+
+	"default_locale": "en",
+	"description": "Provides instant access to timers on any ActiveCollab page that lists tasks.",
+	"icons": {
+		"16": "icons/icon16.png",
+		"19": "icons/icon19.png",
+		"32": "icons/icon32.png",
+		"38": "icons/icon38.png",
+		"48": "icons/icon48.png",
+		"64": "icons/icon64.png",
+		"128": "icons/icon128.png"
+	},
+
 	"browser_action": {
 		"default_title": "ActiveCollabInlineTimers",
 		"default_popup": "popup/popup.html",
@@ -16,5 +22,28 @@
 			"19": "icons/icon16.png",
 			"38": "icons/icon38.png"
 		}
-	}
+	},
+
+	"author": "Cameron Kline of DRM Productions",
+	"background": {
+		"scripts": ["server.js"],
+		"persistent": true
+	},
+	"content_scripts": [
+		{
+			"matches": ["*://*/*"],
+			"js": ["client.js"],
+			"run_at": "document_end"
+		}
+	],
+	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+	"homepage_url": "https://drminc.com",
+	"permissions": [
+		"tabs",
+		"activeTab",
+		"webNavigation",
+		"storage",
+		"*://*/*"
+	],
+	"web_accessible_resources": ["utils.js", "page.js", "page.css"]
 }
