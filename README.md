@@ -4,7 +4,7 @@ Active Collab Inline Timers provides instant access to timers on any Active Coll
 
 ### Overview
 
-Active Collab Inline Timers provides a streamlined interface for tracking, editing, and submitting time to your Active Collab site. You can start, stop, and pause timers from your my work or project pages. You can set defaults for your timers from the extensions popup. These defaults are on a per hostname basis (so if you're part of two different activecollab sites, you can have individual preferences for each).
+Active Collab Inline Timers provides a streamlined interface for tracking, editing, and submitting time to your Active Collab site. You can start, stop, and pause timers from your my work or project pages. You can set defaults for your timers from the extensions popup. These defaults are on a per hostname basis (so if you're part of two different Active Collab sites, you can have individual preferences for each).
 
 ### Contributing
 
