@@ -477,7 +477,7 @@
 				var project = timerPayload.project_id;
 				delete timerPayload.project_id;
 				timerPayload.user_id = angie.user_session_data.logged_user_id;
-				fetch('http://projects.drminc.com/api/v1/projects/' + project + '/time-records', {
+				fetch(angie.api_url + '/projects/' + project + '/time-records', {
 					method: 'POST',
 					credentials: 'include',
 					headers: {
