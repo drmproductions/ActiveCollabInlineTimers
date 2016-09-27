@@ -10,6 +10,10 @@ Active Collab Inline Timers provides a streamlined interface for tracking, editi
 
 Feel free to fork this project, and submit pull requests! We're always looking to improve this Chrome Extension.
 
+### Supported Versions
+
+Active Collab Inline Timers was tested against Active Collab version 5.11.0.  It theoretically should work in all of version 5, but hasn't been tested as of yet.
+
 ### Issues
 
 We use GitHubs built in [issue tracker](https://github.com/drmproductions/ActiveCollabInlineTimers/issues) for tracking issues.
