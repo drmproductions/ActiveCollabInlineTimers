@@ -1,8 +1,8 @@
 
 // only set everything up if this page is an activecollab page
 if (Array.prototype.slice.call(document.getElementsByTagName('script')).some(function (scriptEl) {
-	return !(['activecollab', '/api/v1', 'ac_ActiveCollab_csrf', 'angie.api_url'].some(function (val) {
-		if (scriptEl.innerHTML.indexOf(val) === -1) return true;
+	return !(['activecollab', '/api/v1', 'activecollab_csrf', 'angie.api_url'].some(function (val) {
+		if (scriptEl.innerHTML.toLowerCase().indexOf(val) === -1) return true;
 	}))
 })) {
 
