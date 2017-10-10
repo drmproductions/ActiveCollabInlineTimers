@@ -46,7 +46,7 @@ window.addEventListener('DOMContentLoaded', function () {
 							action: action,
 							payload: payload
 						}, function (response) {
-							if (!response || !response.from || response.from != 'SERVER' || !response.payload) return;
+							if (!response || !response.from || response.from != 'SERVER') return;
 							if (typeof cb === 'function') cb(response.payload);
 						});
 					});
@@ -91,23 +91,27 @@ window.addEventListener('DOMContentLoaded', function () {
 				});
 
 				actionEls.timersResetAllPages.addEventListener('click', function () {
-					Server.do('timers/reset/all');
-					window.close();
+					Server.do('timers/reset/all', null, function() {
+						window.close();
+					});
 				});
 
 				actionEls.timersResetCurrentPage.addEventListener('click', function () {
-					Server.do('timers/reset/current');
-					window.close();
+					Server.do('timers/reset/current', null, function() {
+						window.close();
+					});
 				});
 
 				actionEls.timersSubmitAllPages.addEventListener('click', function () {
-					Server.do('timers/submit/all');
-					window.close();
+					Server.do('timers/submit/all', null, function() {
+						window.close();
+					});
 				});
 
 				actionEls.timersSubmitCurrentPage.addEventListener('click', function () {
-					Server.do('timers/submit/current');
-					window.close();
+					Server.do('timers/submit/current', null, function() {
+						window.close();
+					});
 				});
 
 				payload.jobTypes.forEach(function (jobType) {
