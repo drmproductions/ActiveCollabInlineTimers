@@ -4,7 +4,6 @@
 	* fix for v6 (add class to body)
 	*/
 	if(typeof undefined !== typeof window.angie){
-		console.log(parseFloat(window.angie.application_version) * 1)
 		if((parseFloat(window.angie.application_version) * 1) >= 6) {
 			$('body').addClass('v6-or-higher');
 		}
