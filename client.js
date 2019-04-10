@@ -20,8 +20,11 @@ if (Array.prototype.slice.call(document.getElementsByTagName('script')).some(fun
 	// setup direct message passing from CLIENT_INTERNAL to the main extension background process
 	window.addEventListener('message', function (event) {
 		if (event.source != window || !event.data.from || event.data.from != 'CLIENT_INTERNAL') return;
-		event.data.from = 'CLIENT_EXTERNAL'
-		chrome.runtime.sendMessage(event.data, function (response) {
+
+		const data = JSON.parse(JSON.stringify(event.data));
+		data.from = 'CLIENT_EXTERNAL';
+
+		chrome.runtime.sendMessage(data, function (response) {
 			if (!response || !response.from || response.from != 'SERVER' || !response.payload) return;
 			response.from = 'CLIENT_EXTERNAL';
 			window.postMessage(response, "*");
