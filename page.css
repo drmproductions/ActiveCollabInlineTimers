@@ -155,3 +155,19 @@
 	-ms-user-select: none;
 	user-select: none;
 }
+
+/*
+*	FIXES: 04.10.2019
+*/
+.profile_page_section_group_content {
+	margin-left: 100px;
+}
+.acit-timer {
+	padding-top: 5px;
+}
+.tasks.sortable_enabled .acit-timer {
+	margin-left: -48px !important;
+}
+.tasks.sortable_enabled > ul > li {
+	padding-left: 150px !important;
+}

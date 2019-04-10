@@ -1,4 +1,3 @@
-console.log('popup.js loaded!');
 
 function require (urls, cb) {
 	if (!Array.isArray(urls) && typeof urls === 'string') urls = [urls];
