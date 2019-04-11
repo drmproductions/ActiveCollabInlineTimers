@@ -469,18 +469,29 @@
 			renderTimers: function () {
 				this.timers.forEach(function (timer) {
 					var html = utils.formattedTime(timer, 0, 0);
+
+					var schema1     = ['#ff3c3c', '#ffc637', '#44a6ff'];
+					var schema2     = ['#48f311', '#ffc637', '#ff3c3c'];
+					var schemaToUse = schema1;
+
+					if(null != window.localStorage.getItem('schema') || 'false' == window.localStorage.getItem('schema') || false == window.localStorage.getItem('schema')){
+						if('schema2' == window.localStorage.getItem('schema')){
+							schemaToUse = schema2;
+						}
+					}
+					
 					if (timer.state == 'running') {
-						timer.el.time.css({ backgroundColor: '#48f311' });
+						timer.el.time.css({ backgroundColor: schemaToUse[0] });
 						if (timer.el.time.html().indexOf(':') !== -1) {
 							html = html.replace(':', ' ');
 						}
 					}
 					else if (timer.state == 'paused') {
-						timer.el.time.css({ backgroundColor: '#ffc637' });
+						timer.el.time.css({ backgroundColor: schemaToUse[1] });
 					}
 					else {
 						html = "00:00";
-						timer.el.time.css({ backgroundColor: '#ff3c3c' });
+						timer.el.time.css({ backgroundColor: schemaToUse[2] });
 					}
 					timer.el.time.html(html);
 				});

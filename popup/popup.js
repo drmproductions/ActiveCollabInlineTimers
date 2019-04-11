@@ -63,7 +63,8 @@ window.addEventListener('DOMContentLoaded', function () {
 					jobTypeId: document.getElementById('pref_jobTypeId'),
 					billable: document.getElementById('pref_billable'),
 					roundingInterval: document.getElementById('pref_roundingInterval'),
-					minimumEntry: document.getElementById('pref_minimumEntry')
+					minimumEntry: document.getElementById('pref_minimumEntry'),
+					schemas: document.getElementById('pref_schemas')
 				};
 
 				var actionEls = {
@@ -87,6 +88,12 @@ window.addEventListener('DOMContentLoaded', function () {
 
 				prefEls.minimumEntry.addEventListener('change', function () {
 					Server.do('session/prefs/set', { key: 'minimumEntry', value: parseInt(this.value) });
+				});
+
+				prefEls.schemas.addEventListener('change', function () {
+					chrome.tabs.query({active:true}, (tabs) => {
+					    chrome.tabs.executeScript(tabs[0].id, {code: 'localStorage.setItem("schema", "'+this.value+'");'});
+					});
 				});
 
 				actionEls.timersResetAllPages.addEventListener('click', function () {

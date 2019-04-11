@@ -6,8 +6,6 @@ if (Array.prototype.slice.call(document.getElementsByTagName('script')).some(fun
 	}))
 })) {
 
-	console.log('client.js loaded!');
-
 	window.isActiveCollab = true;
 
 	// listen for messages from the popup
