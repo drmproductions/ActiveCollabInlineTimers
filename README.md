@@ -12,7 +12,11 @@ Feel free to fork this project, and submit pull requests! We're always looking t
 
 ### Supported Versions
 
-Active Collab Inline Timers was tested against Active Collab version 5.11.0.  It theoretically should work in all of version 5, but hasn't been tested as of yet.
+Active Collab Inline Timers was tested against Active Collab version 5.11.0 through 5.13.133 as well as version 6.0.50.  It theoretically should work in all of versions 5 and 6.
+
+### Theme Support
+
+You can now choose your color scheme in the preferences to match Active Collab coloring or go with a traffic light style pattern.
 
 ### Issues
 
