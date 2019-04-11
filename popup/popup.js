@@ -92,7 +92,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
 				prefEls.schemas.addEventListener('change', function () {
 					chrome.tabs.query({active:true}, (tabs) => {
-					    chrome.tabs.executeScript(tabs[0].id, {code: 'localStorage.setItem("schema", "'+this.value+'");'});
+						chrome.tabs.executeScript(null, {code: 'localStorage.setItem("schema", "'+this.value+'");'});
 					});
 				});
 
