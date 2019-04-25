@@ -171,3 +171,9 @@
 .v6-or-higher .page_paper .tasks.sortable_enabled > ul > li {
 	padding-left: 150px !important;
 }
+.v6-or-higher.self-hosted .page_paper .tasks.sortable_enabled .acit-timer {
+	margin-left: -78px !important;
+}
+.v6-or-higher.self-hosted .page_paper .tasks.sortable_enabled > ul > li {
+	padding-left: 30px !important;
+}

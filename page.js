@@ -7,6 +7,9 @@
 		if((parseFloat(window.angie.application_version) * 1) >= 6) {
 			$('body').addClass('v6-or-higher');
 		}
+		if(!window.angie.root_url.includes("app.activecollab.com")){
+			$('body').addClass('v6-or-higher self-hosted');
+		}
 	}
 
 	function require (urls, cb) {
@@ -479,7 +482,7 @@
 							schemaToUse = schema2;
 						}
 					}
-					
+
 					if (timer.state == 'running') {
 						timer.el.time.css({ backgroundColor: schemaToUse[0] });
 						if (timer.el.time.html().indexOf(':') !== -1) {
