@@ -8,7 +8,7 @@
 			$('body').addClass('v6-or-higher');
 		}
 		if(!window.angie.root_url.includes("app.activecollab.com")){
-			$('body').addClass('v6-or-higher self-hosted');
+			$('body').addClass('self-hosted');
 		}
 	}
 
