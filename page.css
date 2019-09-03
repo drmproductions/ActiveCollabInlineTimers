@@ -1,9 +1,5 @@
 .acit-timer {
-	/* position: absolute; */
-	/* width: 172px; */
-	/* left: 0; */
-	/* top: 2px; */
-	/* height: 19px; */
+	position: relative;
 	float: left;
 	line-height: 17px;
 	clear: right;
@@ -25,7 +21,6 @@
 	float: right;
 	border-radius: 9px;
 	box-sizing: border-box;
-	/* border: 1px solid #aaa; */
 }
 
 .acit-timer-button {
@@ -46,16 +41,13 @@
 }
 
 .acit-timer-menu {
-	/* display: none !important; */
 	position: relative;
 	margin: 0;
-	/* top: 2px; */
 	display: block;
 	float: right;
 	width: 30px;
 	background-repeat: no-repeat;
 	background-position: center center;
-	/* border: 1px solid #666; */
 	height: 16px;
 	background-color: #fff;
 	opacity: 0;

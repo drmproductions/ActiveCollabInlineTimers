@@ -206,7 +206,7 @@
 				if (timer) {
 
 					self.timerForMenu = timer;
-					self.timerForMenu.el.menu[0].style.setProperty('opacity', '0.3', 'important');
+					self.timerForMenu.el.menu[0].style.setProperty('opacity', '0.4', 'important');
 
 					self.menuElement = $('<div>');
 					timer.el.base.append([self.menuElement]);
@@ -327,9 +327,17 @@
 							)
 						]);
 
-					var bottomOfPage = $("html").height() + $("html").scrollTop()
-					var bottomOfMenu = self.timerForMenu.el.base.offset().top + self.menuElement.height()
-					self.menuElement.addClass(bottomOfMenu > bottomOfPage ? "positioned-above" : "positioned-below")
+					var menuHeight = self.menuElement.height()
+
+					var topOfMenu = self.timerForMenu.el.base.offset().top
+					var topOfPage = $("html").scrollTop()
+					var bottomOfMenu = topOfMenu + menuHeight
+					var bottomOfPage = topOfPage + $("html").height()
+
+					var popupTopWouldBeHidden = topOfMenu - menuHeight < topOfPage
+					var popupBottomWouldBeHidden = bottomOfMenu > bottomOfPage
+
+					self.menuElement.addClass(!popupTopWouldBeHidden && popupBottomWouldBeHidden ? "positioned-above" : "positioned-below")
 
 					self.refreshMenu(project, task);
 				}
@@ -422,20 +430,13 @@
 				var self = this;
 				// search for all the possible timer locations
 				var timersOnDOM = [];
-				$('div.task').each(function (e) {
+				$('div.task_view_mode').each(function (e) {
 					var href = $(this).find('.task_name').attr('href');
 					if (href) {
 						var split = href.split('/');
 						var project = parseInt(split[1]);
 						var task = parseInt(split[3].split('?')[0]);
 						var timer = self.getTimer(project, task);
-						// var parentEl = $(this)//.find('.task_view_mode').parent();
-						
-						// // FIX 04.10.2019 - .task and .task_view_mode
-						// // are sometimes the same element (in some views)
-						// if(!$(this).find('.task_view_mode').length && $(this).hasClass('task_view_mode')){
-						// 	var parentEl = $(this).parent();
-						// }
 
 						if (!timer) {
 							self.addTimer(project, task, $(this));
