@@ -4,9 +4,9 @@
 	* fix for v6 (add class to body)
 	*/
 	if(typeof undefined !== typeof window.angie){
-		if((parseFloat(window.angie.application_version) * 1) >= 6) {
-			$('body').addClass('v6-or-higher');
-		}
+		// if((parseFloat(window.angie.application_version) * 1) >= 6) {
+		// 	$('body').addClass('v6-or-higher');
+		// }
 		if(!window.angie.root_url.includes("app.activecollab.com")){
 			$('body').addClass('self-hosted');
 		}
@@ -160,7 +160,7 @@
 			mutationObserver: null,
 			removeMenu: function (e) {
 				if (TimerManager.timerForMenu) {
-					TimerManager.timerForMenu.el.menu.css('display', '');
+					TimerManager.timerForMenu.el.menu.css('opacity', '');
 					TimerManager.menuElement.remove();
 					TimerManager.menuElement = null;
 					TimerManager.timerForMenu = null;
@@ -194,7 +194,7 @@
 
 				// remove the old menu if it exists
 				if (self.menuElement) {
-					self.timerForMenu.el.menu.css('display', '');
+					self.timerForMenu.el.menu.css('opacity', '');
 					self.menuElement.remove();
 					self.menuElement = null;
 					self.timerForMenu = null;
@@ -206,7 +206,7 @@
 				if (timer) {
 
 					self.timerForMenu = timer;
-					self.timerForMenu.el.menu[0].style.setProperty('display', 'block', 'important');
+					self.timerForMenu.el.menu[0].style.setProperty('opacity', '0.3', 'important');
 
 					self.menuElement = $('<div>');
 					timer.el.base.append([self.menuElement]);
@@ -346,16 +346,16 @@
 					timer.el.menu = $('<button>');
 					timer.el.time = $('<div>');
 
-					parentEl.append(timer.el.base.html([timer.el.time, timer.el.menu]));
+					parentEl.prepend(timer.el.base.html([timer.el.time, timer.el.menu]));
 
 					// the task needs to be at an offset on individual project pages
-					if (window.location.pathname.match(/(\/projects\/)([0-9]*)/g)) {
-						parentEl.css({ paddingLeft: '100px' });
-						timer.el.base.css({ marginLeft: '-78px' });
-					}
-					else {
-						timer.el.base.css({ marginLeft: '-180px' });
-					}
+					// if (window.location.pathname.match(/(\/projects\/)([0-9]*)/g)) {
+					// 	parentEl.css({ paddingLeft: '90px' });
+					// 	timer.el.base.css({ marginLeft: '-78px' });
+					// }
+					// else {
+					// 	timer.el.base.css({ marginLeft: '-180px' });
+					// }
 
 					timer.el.base.addClass('acit-timer');
 
