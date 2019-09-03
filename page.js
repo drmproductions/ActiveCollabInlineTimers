@@ -419,18 +419,21 @@
 						var project = parseInt(split[1]);
 						var task = parseInt(split[3].split('?')[0]);
 						var timer = self.getTimer(project, task);
-						var parentEl = $(this).find('.task_view_mode').parent();
-						// FIX 04.10.2019 - .task and .task_view_mode
-						// are sometimes the same element (in some views)
-						if(!$(this).find('.task_view_mode').length && $(this).hasClass('task_view_mode')){
-							var parentEl = $(this).parent();
-						}
+						// var parentEl = $(this)//.find('.task_view_mode').parent();
+						
+						// // FIX 04.10.2019 - .task and .task_view_mode
+						// // are sometimes the same element (in some views)
+						// if(!$(this).find('.task_view_mode').length && $(this).hasClass('task_view_mode')){
+						// 	var parentEl = $(this).parent();
+						// }
+
 						if (!timer) {
-							self.addTimer(project, task, parentEl);
+							self.addTimer(project, task, $(this));
 						}
 						else if (!self.checkTimerOnDOM(project, task)) {
-							self.addTimerToDom(project, task, parentEl);
+							self.addTimerToDom(project, task, $(this));
 						}
+
 						timersOnDOM.push({ project: project, task: task });
 					}
 				});
