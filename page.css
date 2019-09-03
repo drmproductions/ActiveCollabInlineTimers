@@ -67,8 +67,21 @@
 	visibility: visible;
 	display: block !important;
 	left: -32px !important;
-	top: 21px !important;
+	/* top: 21px !important; */
 	text-align: left;
+}
+
+.acit-timer-menu-dropdown.positioned-above {
+	bottom: 21px !important;
+}
+
+.acit-timer-menu-dropdown.positioned-below {
+	top: 28px !important;
+}
+
+.acit-timer-menu-dropdown.positioned-above .popover_arrow {
+	top: calc(100% - 1px);
+	transform: rotateZ(180deg);
 }
 
 .acit-timer-menu-dropdown-input {

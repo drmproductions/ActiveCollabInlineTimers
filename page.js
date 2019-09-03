@@ -327,6 +327,10 @@
 							)
 						]);
 
+					var bottomOfPage = $("html").height() + $("html").scrollTop()
+					var bottomOfMenu = self.timerForMenu.el.base.offset().top + self.menuElement.height()
+					self.menuElement.addClass(bottomOfMenu > bottomOfPage ? "positioned-above" : "positioned-below")
+
 					self.refreshMenu(project, task);
 				}
 			},
@@ -360,6 +364,12 @@
 						.click(function (e) {
 							if (e.target != timer.el.menu[0]) return;
 							e.stopPropagation();
+
+							if (TimerManager.timerForMenu) {
+								TimerManager.removeMenu();
+								return;
+							}
+
 							self.showMenu(project, task);
 						})
 						.dblclick(function (e) {
