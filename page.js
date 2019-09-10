@@ -12,6 +12,8 @@
 		}
 	}
 
+	var optionsSvgBase64 = 'PCEtLT94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8tLT4KPHN2ZyB3aWR0aD0iMThweCIgaGVpZ2h0PSIxOHB4IiB2aWV3Qm94PSIwIDAgMTggMTgiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPgoJPGcgaWQ9IlBhZ2UtMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc2tldGNoOnR5cGU9Ik1TUGFnZSI+CgkJPGcgaWQ9Im9wdGlvbnNfZHJvcGRvd24iIHNrZXRjaDp0eXBlPSJNU0FydGJvYXJkR3JvdXAiPgoJCQk8cGF0aCBkPSJNMyw3IEMxLjg5NTQzMDUsNyAxLDcuODg3NzI5NjQgMSw5IEwxLDkgQzEsMTAuMTA0NTY5NSAxLjg4NzcyOTY0LDExIDMsMTEgTDMsMTEgQzQuMTA0NTY5NSwxMSA1LDEwLjExMjI3MDQgNSw5IEw1LDkgQzUsNy44OTU0MzA1IDQuMTEyMjcwMzYsNyAzLDcgTDMsNyBaIE05LDcgQzcuODk1NDMwNSw3IDcsNy44ODc3Mjk2NCA3LDkgTDcsOSBDNywxMC4xMDQ1Njk1IDcuODg3NzI5NjQsMTEgOSwxMSBMOSwxMSBDMTAuMTA0NTY5NSwxMSAxMSwxMC4xMTIyNzA0IDExLDkgTDExLDkgQzExLDcuODk1NDMwNSAxMC4xMTIyNzA0LDcgOSw3IEw5LDcgWiBNMTUsNyBDMTMuODk1NDMwNSw3IDEzLDcuODg3NzI5NjQgMTMsOSBMMTMsOSBDMTMsMTAuMTA0NTY5NSAxMy44ODc3Mjk2LDExIDE1LDExIEwxNSwxMSBDMTYuMTA0NTY5NSwxMSAxNywxMC4xMTIyNzA0IDE3LDkgTDE3LDkgQzE3LDcuODk1NDMwNSAxNi4xMTIyNzA0LDcgMTUsNyBMMTUsNyBaIiBpZD0iUmVjdGFuZ2xlLTEwOSIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCI+PC9wYXRoPgoJCTwvZz4KCTwvZz4KPC9zdmc+'
+
 	function require (urls, cb) {
 		if (!Array.isArray(urls) && typeof urls === 'string') urls = [urls];
 		var modules = [];
@@ -265,7 +267,7 @@
 
 					timeEl.addClass('acit-timer-menu-dropdown-timer task_panel_property').html([
 						$('<label>').html('Time'),
-						$('<input>').addClass('acit-timer-menu-dropdown-input')
+						$('<input>').attr('type', 'text').addClass('acit-timer-menu-dropdown-input')
 						.val(self.menuPropCache ? self.menuPropCache.formattedTime : '')
 						.keyup(function (e) {
 							var self = this;
@@ -335,7 +337,7 @@
 					var bottomOfPage = topOfPage + $("html").height()
 
 					var popupTopWouldBeHidden = topOfMenu - menuHeight < topOfPage
-					var popupBottomWouldBeHidden = bottomOfMenu > bottomOfPage
+					var popupBottomWouldBeHidden = bottomOfMenu + 10 > bottomOfPage
 
 					self.menuElement.addClass(!popupTopWouldBeHidden && popupBottomWouldBeHidden ? "positioned-above" : "positioned-below")
 
@@ -351,7 +353,7 @@
 				if (timer) {
 
 					timer.el.base = $('<div>');
-					timer.el.menu = $('<button>');
+					timer.el.menu = $('<div>');
 					timer.el.time = $('<div>');
 
 					parentEl.prepend(timer.el.base.html([timer.el.time, timer.el.menu]));
@@ -368,9 +370,10 @@
 					timer.el.base.addClass('acit-timer');
 
 					timer.el.menu
-						.addClass('acit-timer-menu icon icon_options_dropdown_black')
+						.html(atob(optionsSvgBase64))
+						.addClass('acit-timer-menu icon more_icon')
 						.click(function (e) {
-							if (e.target != timer.el.menu[0]) return;
+							if (e.target != timer.el.menu[0] && !$.contains(timer.el.menu[0], e.target)) return;
 							e.stopPropagation();
 
 							if (TimerManager.timerForMenu) {

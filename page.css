@@ -11,16 +11,27 @@
 }
 
 .acit-timer-time {
-	width: 48px;
-	height: 19px;
-	line-height: 19px;
-	clear: none;
-	color: white;
-	text-align: center;
-	cursor: pointer;
-	float: right;
 	border-radius: 9px;
 	box-sizing: border-box;
+	clear: none;
+	color: white;
+	cursor: pointer;
+	float: right;
+	height: 19px;
+	line-height: 19px;
+	position: relative;
+	text-align: center;
+	transition: transform .1s ease;
+	width: 48px;
+	z-index: 1;
+}
+
+.acit-timer-time:hover {
+	transform: scale(1.1);
+}
+
+.acit-timer-time:active {
+	transform: scale(1);
 }
 
 .acit-timer-button {
@@ -41,27 +52,31 @@
 }
 
 .acit-timer-menu {
-	position: relative;
-	margin: 0;
+	border: none;
+	cursor: pointer;
 	display: block;
 	float: right;
-	width: 30px;
-	background-repeat: no-repeat;
-	background-position: center center;
 	height: 16px;
-	background-color: #fff;
+	margin-left: 6px;
+	margin-right: 6px;
 	opacity: 0;
-	border: none;
+	position: relative;
+	transition: opacity 0.3s linear;
+	width: 30px;
 }
 
-.acit-timer:hover .acit-timer-menu {
+.acit-timer-menu:hover {
+	opacity: 1 !important;
+}
+
+.task_view_mode:hover .acit-timer-menu {
 	opacity: 0.4;
 }
 
 .acit-timer-menu-dropdown {
 	visibility: visible;
 	display: block !important;
-	left: -111px !important;
+	left: -114px !important;
 	text-align: left;
 }
 
@@ -80,7 +95,7 @@
 
 .acit-timer-menu-dropdown-input {
 	margin-top: 10px;
-	width: 100%;
+	width: 100% !important;
 	height: 32px;
 	border-radius: 3px;
 	border: 1px solid #d1d1d1;
