@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "Active Collab Inline Timers",
-	"version": "1.0.10",
+	"version": "2.0.0",
 	"description": "Provides instant access to timers on any Active Collab page that lists tasks.",
 	"icons": {
 		"16": "icons/icon16.png",

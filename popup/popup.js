@@ -79,7 +79,7 @@ window.addEventListener('DOMContentLoaded', function () {
 				});
 
 				prefEls.billable.addEventListener('change', function () {
-					Server.do('session/prefs/set', { key: 'billable', value: (this.value === "1") });
+					Server.do('session/prefs/set', { key: 'billable', value: +this.value });
 				});
 
 				prefEls.roundingInterval.addEventListener('change', function () {
@@ -128,7 +128,7 @@ window.addEventListener('DOMContentLoaded', function () {
 				});
 
 				prefEls.jobTypeId.value = payload.prefs.jobTypeId;
-				prefEls.billable.value = (payload.prefs.billable == true) ? '1' : '0';
+				prefEls.billable.value = +payload.prefs.billable;
 				prefEls.roundingInterval.value = payload.prefs.roundingInterval;
 				prefEls.minimumEntry.value = payload.prefs.minimumEntry;
 			});

@@ -1,5 +1,9 @@
 console.log('server.js loaded!');
 
+const BILLABLE_NO = 0;
+const BILLABLE_YES = 1;
+const BILLABLE_FOLLOW_TASK = 2;
+
 function require (urls, cb) {
 	if (!Array.isArray(urls) && typeof urls === 'string') urls = [urls];
 	var modules = [];
@@ -40,7 +44,7 @@ require(chrome.extension.getURL('utils.js'), function (utils) {
 					session[hostname] = {
 						prefs: {
 							jobTypeId: null,
-							billable: true,
+							billable: BILLABLE_FOLLOW_TASK,
 							roundingInterval: 0,
 							minimumEntry: 0
 						}
@@ -49,7 +53,14 @@ require(chrome.extension.getURL('utils.js'), function (utils) {
 				}
 				// or return the existing one
 				else {
-					cb(session[hostname]);
+					// check if using Respect Task update, if not default to "follow task" ///
+					if(!session[hostname]['hasRespectTaskFix']) {
+						session[hostname]['hasRespectTaskFix'] = true;
+						session[hostname]['prefs']['billable'] = BILLABLE_FOLLOW_TASK;
+						Session.save(hostname, session[hostname], function () { cb(session[hostname]); });
+					} else {
+						cb(session[hostname]);
+					}
 				}
 			});
 		},

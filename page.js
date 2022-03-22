@@ -1,4 +1,7 @@
 (function () {
+	const BILLABLE_NO = 0;
+	const BILLABLE_YES = 1;
+	const BILLABLE_FOLLOW_TASK = 2;
 	/*
 	* TJ 04.10.2019
 	* fix for v6 (add class to body)
@@ -181,8 +184,9 @@
 					self.menuElement.find('.acit-timer-menu-dropdown-summary textarea').val(payload.summary);
 
 					self.menuElement.find('.acit-timer-menu-dropdown-billable select').html([
-						$('<option>').val('1').html('Yes').attr('selected', (payload.billable ? 'selected' : null)),
-						$('<option>').val('0').html('No').attr('selected', (!payload.billable ? 'selected' : null))
+						$('<option>').val('1').html('Yes').attr('selected', (+payload.billable === BILLABLE_YES ? 'selected' : null)),
+						$('<option>').val('0').html('No').attr('selected', (+payload.billable === BILLABLE_NO ? 'selected' : null)),
+						$('<option>').val('2').html('Follow Task').attr('selected', (+payload.billable === BILLABLE_FOLLOW_TASK ? 'selected' : null))
 					]);
 
 					self.menuElement.find('.acit-timer-menu-dropdown-timer input').val(payload.formattedTime);
@@ -253,14 +257,15 @@
 						$('<select>')
 							.addClass('acit-timer-menu-dropdown-select')
 							.html(self.menuPropCache ? [
-								$('<option>').val('1').html('Yes').attr('selected', (self.menuPropCache.billable ? 'selected' : null)),
-								$('<option>').val('0').html('No').attr('selected', (!self.menuPropCache.billable ? 'selected' : null))
+								$('<option>').val('1').html('Yes').attr('selected', (+self.menuPropCache.billable === BILLABLE_YES ? 'selected' : null)),
+								$('<option>').val('0').html('No').attr('selected', (+self.menuPropCache.billable === BILLABLE_NO ? 'selected' : null)),
+								$('<option>').val('2').html('Follow Task').attr('selected', (+self.menuPropCache.billable === BILLABLE_FOLLOW_TASK ? 'selected' : null))
 							] : [])
 							.change(function () {
 								Server.do('timer/set/billable', {
 									project: project,
 									task: task,
-									value: (this.value === '1')
+									value: +this.value
 								});
 							})
 					]);
@@ -520,18 +525,47 @@
 				var project = timerPayload.project_id;
 				delete timerPayload.project_id;
 				timerPayload.user_id = angie.user_session_data.logged_user_id;
-				fetch(angie.api_url + '/projects/' + project + '/time-records', {
-					method: 'POST',
-					credentials: 'include',
-					headers: {
-						'X-Angie-CsrfValidator': window.getCsrfCookie(),
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(timerPayload)
-				})
-				.then(function (response) { return response.json(); })
-				.then(function (json) { cb(null); })
-				.catch(function (ex) { cb(ex); });
+				timerPayload.billable_status = +timerPayload.billable_status;
+				var submit = function () {
+					// failsafe incase biilable is set to a number api doesn't support //
+					timerPayload.billable_status = timerPayload.billable_status > BILLABLE_YES ?
+						BILLABLE_YES : timerPayload.billable_status;
+					fetch(angie.api_url + '/projects/' + project + '/time-records', {
+						method: 'POST',
+						credentials: 'include',
+						headers: {
+							'X-Angie-CsrfValidator': window.getCsrfCookie(),
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(timerPayload)
+					})
+						.then(function (response) {
+							return response.json();
+						})
+						.then(function (json) {
+							cb(null);
+						})
+						.catch(function (ex) {
+							cb(ex);
+						});
+				}
+				if(+timerPayload.billable_status === BILLABLE_FOLLOW_TASK) {
+					fetch(angie.api_url + '/projects/' + project + "/tasks/" + timerPayload.task_id)
+						.then(function (response) {
+							return response.json();
+						})
+						.then( (response) => {
+							if(response && response.single) {
+								timerPayload.billable_status = +response.single.is_billable;
+								submit();
+							}
+						})
+						.catch(function (ex) {
+							cb(ex);
+						});
+				} else {
+					submit();
+				}
 			},
 			submitTimers: function (options) {
 				var self = this;
